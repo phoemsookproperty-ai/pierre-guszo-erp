@@ -6,6 +6,7 @@ import {
   User,
   Clock,
   ArrowRight,
+  ArrowLeft,
   Plus,
   Filter,
   CheckCircle,
@@ -133,7 +134,7 @@ export default function ProductionKanban() {
 
       {/* Kanban Board Grid - Constrained wrapper to prevent global page stretch */}
       <div className="w-full overflow-x-hidden lg:overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-200 scroll-smooth">
-        <div className="flex flex-col lg:flex-row gap-4 lg:min-w-max pb-2 pr-4">
+        <div className="flex flex-col lg:flex-row gap-3.5 lg:min-w-[1300px] xl:min-w-0 xl:w-full pb-2 pr-4">
           {Object.keys(columnTitles).map((colKey) => {
             const colInfo = columnTitles[colKey];
             const jobsList = board[colKey] || [];
@@ -142,7 +143,7 @@ export default function ProductionKanban() {
             return (
               <div
                 key={colKey}
-                className={`w-full lg:w-72 shrink-0 rounded-xl border border-slate-200 flex flex-col max-h-[75vh] ${colInfo.color} ${
+                className={`w-full lg:w-[210px] lg:shrink-0 xl:w-auto xl:flex-1 rounded-xl border border-slate-200 flex flex-col max-h-[75vh] ${colInfo.color} ${
                   isVisible ? 'flex' : 'hidden lg:flex'
                 }`}
               >
@@ -190,21 +191,41 @@ export default function ProductionKanban() {
                           </div>
                         </div>
 
-                        {/* Quick Move Trigger Button */}
+                        {/* Quick Move Trigger Buttons */}
                         <div className="flex justify-end gap-1.5 pt-2 border-t border-slate-50">
+                          {colKey !== 'waiting_fabric' && (
+                            <button
+                              onClick={() => {
+                                if (confirm('คุณต้องการย้ายงานนี้กลับไปยังขั้นตอนก่อนหน้าหรือไม่?')) {
+                                  const columns = Object.keys(columnTitles);
+                                  const currentIdx = columns.indexOf(colKey);
+                                  moveJob(job.id, colKey, columns[currentIdx - 1]);
+                                  // Move active tab to the previous column on mobile
+                                  setActiveTab(columns[currentIdx - 1]);
+                                }
+                              }}
+                              className="p-1 bg-slate-50 border border-slate-200 rounded hover:bg-royal-navy/10 hover:text-royal-navy hover:border-royal-navy/30 text-slate-400 transition-colors"
+                              title="ย้อนกลับขั้นตอนก่อนหน้า"
+                            >
+                              <ArrowLeft className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          
                           {colKey !== 'ready' && (
                             <button
                               onClick={() => {
-                                const columns = Object.keys(columnTitles);
-                                const currentIdx = columns.indexOf(colKey);
-                                moveJob(job.id, colKey, columns[currentIdx + 1]);
-                                // Move active tab to the next column on mobile
-                                setActiveTab(columns[currentIdx + 1]);
+                                if (confirm('คุณต้องการย้ายงานนี้ไปยังขั้นตอนถัดไปหรือไม่?')) {
+                                  const columns = Object.keys(columnTitles);
+                                  const currentIdx = columns.indexOf(colKey);
+                                  moveJob(job.id, colKey, columns[currentIdx + 1]);
+                                  // Move active tab to the next column on mobile
+                                  setActiveTab(columns[currentIdx + 1]);
+                                }
                               }}
                               className="p-1 bg-slate-50 border border-slate-200 rounded hover:bg-royal-navy/10 hover:text-royal-navy hover:border-royal-navy/30 text-slate-400 transition-colors"
-                              title="ย้ายไปสถานะถัดไป"
+                              title="ย้ายไปขั้นตอนถัดไป"
                             >
-                              <ArrowRight className="w-3 h-3" />
+                              <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                           )}
                         </div>
