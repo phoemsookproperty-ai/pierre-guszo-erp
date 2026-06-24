@@ -118,9 +118,9 @@ export default function Dashboard() {
       </section>
 
       {/* Production Stage Pipeline Summary */}
-      <section className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">สถานะงานตามขั้นตอนการผลิต</h2>
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+      <section className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">สถานะงานตามขั้นตอนการผลิต</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-6 lg:flex lg:flex-row lg:items-center lg:justify-between gap-2.5">
           {[
             { label: 'รับออเดอร์', count: 28 },
             { label: 'วัดตัว', count: 25 },
@@ -129,13 +129,15 @@ export default function Dashboard() {
             { label: 'แก้ไข', count: 9 },
             { label: 'ส่งมอบ', count: 26 },
           ].map((stage, index, arr) => (
-            <div key={index} className="flex items-center w-full justify-between lg:justify-start gap-4">
-              <div className="flex-1 text-center bg-slate-50 border border-slate-100 hover:border-royal-navy/30 rounded-lg p-3 transition-colors duration-150">
-                <span className="text-[10px] font-bold text-slate-500 uppercase">{stage.label}</span>
-                <div className="text-lg font-bold text-royal-navy mt-1">{stage.count} <span className="text-xs font-normal text-slate-500">งาน</span></div>
+            <div key={index} className="flex items-center flex-1 justify-between lg:justify-start gap-2">
+              <div className="flex-1 text-center bg-slate-50 border border-slate-100 hover:border-royal-navy/30 rounded-lg p-2 transition-colors duration-150">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block truncate">{stage.label}</span>
+                <div className="text-sm font-bold text-royal-navy mt-0.5">
+                  {stage.count} <span className="text-[10px] font-normal text-slate-500">งาน</span>
+                </div>
               </div>
               {index < arr.length - 1 && (
-                <ChevronRight className="w-4 h-4 text-slate-300 hidden lg:block" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300 hidden lg:block shrink-0" />
               )}
             </div>
           ))}

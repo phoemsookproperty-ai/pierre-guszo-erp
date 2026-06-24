@@ -78,7 +78,7 @@ export default function ProductionKanban() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-hidden">
       {/* Kanban Header Controls */}
       <section className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -92,84 +92,86 @@ export default function ProductionKanban() {
         </div>
       </section>
 
-      {/* Kanban Board Grid */}
-      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-200">
-        {Object.keys(columnTitles).map((colKey) => {
-          const colInfo = columnTitles[colKey];
-          const jobsList = board[colKey] || [];
+      {/* Kanban Board Grid - Constrained wrapper to prevent global page stretch */}
+      <div className="w-full overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-200 scroll-smooth">
+        <div className="flex gap-4 min-w-max pb-2 pr-4">
+          {Object.keys(columnTitles).map((colKey) => {
+            const colInfo = columnTitles[colKey];
+            const jobsList = board[colKey] || [];
 
-          return (
-            <div
-              key={colKey}
-              className={`w-72 shrink-0 rounded-xl border border-slate-200 flex flex-col max-h-[75vh] ${colInfo.color}`}
-            >
-              {/* Column Title */}
-              <div className="p-3.5 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-700">{colInfo.title}</span>
-                <span className="text-[10px] font-bold text-slate-400 bg-slate-200/50 px-1.5 py-0.5 rounded-full">
-                  {jobsList.length}
-                </span>
-              </div>
+            return (
+              <div
+                key={colKey}
+                className={`w-72 shrink-0 rounded-xl border border-slate-200 flex flex-col max-h-[75vh] ${colInfo.color}`}
+              >
+                {/* Column Title */}
+                <div className="p-3.5 border-b border-slate-100 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700">{colInfo.title}</span>
+                  <span className="text-[10px] font-bold text-slate-400 bg-slate-200/50 px-1.5 py-0.5 rounded-full">
+                    {jobsList.length}
+                  </span>
+                </div>
 
-              {/* Cards List container */}
-              <div className="p-3 space-y-3 overflow-y-auto flex-1 scrollbar-none min-h-[300px]">
-                {jobsList.length === 0 ? (
-                  <div className="py-12 text-center text-[10px] text-slate-400 font-medium">
-                    ไม่มีใบงานในสถานะนี้
-                  </div>
-                ) : (
-                  jobsList.map((job) => (
-                    <div
-                      key={job.id}
-                      className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow transition-shadow space-y-3 relative group"
-                    >
-                      {/* Job Header */}
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="text-[10px] font-bold text-royal-navy bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">
-                          {job.job_no}
-                        </span>
-                        <span className={`text-[8px] font-bold px-1 py-0.5 rounded border ${getUrgencyBadge(job.urgency)}`}>
-                          {job.urgency}
-                        </span>
-                      </div>
-
-                      {/* Job Details */}
-                      <div className="text-[11px] space-y-1 text-slate-600 text-left">
-                        <div className="font-semibold text-slate-800 truncate">{job.customer_name}</div>
-                        <div className="text-[10px] text-slate-500 font-medium truncate">{job.item}</div>
-                        <div className="flex justify-between text-[9px] text-slate-400 pt-1.5 border-t border-slate-50">
-                          <span className="flex items-center gap-1">
-                            <User className="w-3 h-3" /> ช่าง: {job.assignee}
+                {/* Cards List container */}
+                <div className="p-3 space-y-3 overflow-y-auto flex-1 scrollbar-none min-h-[300px]">
+                  {jobsList.length === 0 ? (
+                    <div className="py-12 text-center text-[10px] text-slate-400 font-medium">
+                      ไม่มีใบงานในสถานะนี้
+                    </div>
+                  ) : (
+                    jobsList.map((job) => (
+                      <div
+                        key={job.id}
+                        className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:shadow transition-shadow space-y-3 relative group"
+                      >
+                        {/* Job Header */}
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[10px] font-bold text-royal-navy bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">
+                            {job.job_no}
                           </span>
-                          <span className="flex items-center gap-1 font-semibold text-slate-500">
-                            <Clock className="w-3 h-3" /> กำหนด: {job.due_date}
+                          <span className={`text-[8px] font-bold px-1 py-0.5 rounded border ${getUrgencyBadge(job.urgency)}`}>
+                            {job.urgency}
                           </span>
                         </div>
-                      </div>
 
-                      {/* Quick Move Trigger Button */}
-                      <div className="flex justify-end gap-1.5 pt-2 border-t border-slate-50">
-                        {colKey !== 'ready' && (
-                          <button
-                            onClick={() => {
-                              const columns = Object.keys(columnTitles);
-                              const currentIdx = columns.indexOf(colKey);
-                              moveJob(job.id, colKey, columns[currentIdx + 1]);
-                            }}
-                            className="p-1 bg-slate-50 border border-slate-200 rounded hover:bg-royal-navy/10 hover:text-royal-navy hover:border-royal-navy/30 text-slate-400 transition-colors"
-                            title="ย้ายไปสถานะถัดไป"
-                          >
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        )}
+                        {/* Job Details */}
+                        <div className="text-[11px] space-y-1 text-slate-600 text-left">
+                          <div className="font-semibold text-slate-800 truncate">{job.customer_name}</div>
+                          <div className="text-[10px] text-slate-500 font-medium truncate">{job.item}</div>
+                          <div className="flex justify-between text-[9px] text-slate-400 pt-1.5 border-t border-slate-50">
+                            <span className="flex items-center gap-1">
+                              <User className="w-3 h-3" /> ช่าง: {job.assignee}
+                            </span>
+                            <span className="flex items-center gap-1 font-semibold text-slate-500">
+                              <Clock className="w-3 h-3" /> กำหนด: {job.due_date}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Quick Move Trigger Button */}
+                        <div className="flex justify-end gap-1.5 pt-2 border-t border-slate-50">
+                          {colKey !== 'ready' && (
+                            <button
+                              onClick={() => {
+                                const columns = Object.keys(columnTitles);
+                                const currentIdx = columns.indexOf(colKey);
+                                moveJob(job.id, colKey, columns[currentIdx + 1]);
+                              }}
+                              className="p-1 bg-slate-50 border border-slate-200 rounded hover:bg-royal-navy/10 hover:text-royal-navy hover:border-royal-navy/30 text-slate-400 transition-colors"
+                              title="ย้ายไปสถานะถัดไป"
+                            >
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
