@@ -17,13 +17,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Body */}
-      <div className="lg:pl-64 min-h-screen flex flex-col flex-1 pb-16 lg:pb-0">
+      <div className="lg:pl-64 min-h-screen flex flex-col flex-1 pb-16 lg:pb-0 min-w-0 w-full overflow-hidden">
         {/* Navigation Topbar */}
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Dynamic Content Panel */}
-        <main className="flex-1 pt-16 p-4 sm:p-6 overflow-x-hidden">
-          <div className="max-w-[1600px] mx-auto space-y-6">
+        <main className="flex-1 pt-16 p-4 sm:p-6 overflow-x-hidden w-full min-w-0">
+          <div className="max-w-[1600px] mx-auto space-y-6 w-full">
             {children}
           </div>
         </main>
