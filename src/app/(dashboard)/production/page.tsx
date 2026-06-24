@@ -55,6 +55,7 @@ const columnTitles: Record<string, { title: string; color: string }> = {
 
 export default function ProductionKanban() {
   const [board, setBoard] = useState<Record<string, Job[]>>(initialJobs);
+  const [activeTab, setActiveTab] = useState<string>('waiting_fabric');
 
   // Move function
   const moveJob = (jobId: string, fromCol: string, toCol: string) => {
@@ -92,17 +93,43 @@ export default function ProductionKanban() {
         </div>
       </section>
 
+      {/* Mobile Columns Tab Selector */}
+      <div className="lg:hidden flex gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 scrollbar-none">
+        {Object.keys(columnTitles).map((colKey) => {
+          const colInfo = columnTitles[colKey];
+          const jobsList = board[colKey] || [];
+          const isActive = activeTab === colKey;
+
+          return (
+            <button
+              key={colKey}
+              onClick={() => setActiveTab(colKey)}
+              className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap border transition-all duration-150 ${
+                isActive
+                  ? 'bg-royal-navy text-white border-royal-navy shadow-sm'
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {colInfo.title.split(' / ')[0]} ({jobsList.length})
+            </button>
+          );
+        })}
+      </div>
+
       {/* Kanban Board Grid - Constrained wrapper to prevent global page stretch */}
-      <div className="w-full overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-200 scroll-smooth">
-        <div className="flex gap-4 min-w-max pb-2 pr-4">
+      <div className="w-full overflow-x-hidden lg:overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-200 scroll-smooth">
+        <div className="flex flex-col lg:flex-row gap-4 lg:min-w-max pb-2 pr-4">
           {Object.keys(columnTitles).map((colKey) => {
             const colInfo = columnTitles[colKey];
             const jobsList = board[colKey] || [];
+            const isVisible = activeTab === colKey;
 
             return (
               <div
                 key={colKey}
-                className={`w-72 shrink-0 rounded-xl border border-slate-200 flex flex-col max-h-[75vh] ${colInfo.color}`}
+                className={`w-full lg:w-72 shrink-0 rounded-xl border border-slate-200 flex flex-col max-h-[75vh] ${colInfo.color} ${
+                  isVisible ? 'flex' : 'hidden lg:flex'
+                }`}
               >
                 {/* Column Title */}
                 <div className="p-3.5 border-b border-slate-100 flex items-center justify-between">
@@ -156,6 +183,8 @@ export default function ProductionKanban() {
                                 const columns = Object.keys(columnTitles);
                                 const currentIdx = columns.indexOf(colKey);
                                 moveJob(job.id, colKey, columns[currentIdx + 1]);
+                                // Move active tab to the next column on mobile
+                                setActiveTab(columns[currentIdx + 1]);
                               }}
                               className="p-1 bg-slate-50 border border-slate-200 rounded hover:bg-royal-navy/10 hover:text-royal-navy hover:border-royal-navy/30 text-slate-400 transition-colors"
                               title="ย้ายไปสถานะถัดไป"

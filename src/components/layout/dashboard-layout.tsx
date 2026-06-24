@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-soft-bg text-slate-800 flex flex-col">
+    <div className="min-h-screen bg-soft-bg text-slate-800 flex flex-col max-w-full overflow-x-hidden">
       {/* Sidebar Drawer */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
