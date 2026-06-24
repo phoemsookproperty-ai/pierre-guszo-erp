@@ -97,7 +97,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         {/* Brand Logo Header */}
         <div className="p-2 border-b border-navy/40 flex flex-col items-center justify-center bg-black-brand/15 relative">
-          <BrandLogo className="w-44 h-44 text-white" />
+          <BrandLogo className="w-48 h-20 text-white" />
           
           {/* Close button on mobile */}
           <button

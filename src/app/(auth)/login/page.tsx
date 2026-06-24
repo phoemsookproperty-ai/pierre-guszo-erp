@@ -57,7 +57,7 @@ export default function Login() {
       <div className="w-full max-w-md bg-navy/35 backdrop-blur-md p-8 rounded-2xl border border-royal-navy/40 shadow-2xl space-y-6">
         {/* Brand Header */}
         <div className="flex flex-col items-center justify-center text-center space-y-1">
-          <BrandLogo className="w-48 h-48 text-white" />
+          <BrandLogo className="w-64 h-24 text-white" />
           <p className="text-[11px] text-silver/50">
             Bespoke Tailoring ERP & CX Platform
           </p>
