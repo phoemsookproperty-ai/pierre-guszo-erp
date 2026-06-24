@@ -128,6 +128,10 @@ export default function Customers() {
 
   useEffect(() => {
     fetchCustomers();
+    // Auto-open modal if URL contains ?add=true
+    if (typeof window !== 'undefined' && window.location.search.includes('add=true')) {
+      setIsModalOpen(true);
+    }
   }, [supabase]);
 
   // Handle Create

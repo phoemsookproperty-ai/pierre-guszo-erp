@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   UserPlus,
   ShoppingBag,
@@ -70,22 +71,23 @@ export default function Dashboard() {
         <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">ทางลัดด่วน</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: 'เพิ่มลูกค้า', icon: UserPlus, color: 'bg-blue-50 text-blue-600 hover:bg-blue-100' },
-            { label: 'รับออเดอร์ใหม่', icon: ShoppingBag, color: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' },
-            { label: 'บันทึกที่วัดตัว', icon: Ruler, color: 'bg-amber-50 text-amber-600 hover:bg-amber-100' },
-            { label: 'สร้างใบเสนอราคา', icon: FileText, color: 'bg-violet-50 text-violet-600 hover:bg-violet-100' },
-            { label: 'นัดหมายลูกค้า', icon: CalendarPlus, color: 'bg-pink-50 text-pink-600 hover:bg-pink-100' },
-            { label: 'ถ่ายภาพชุด', icon: Camera, color: 'bg-slate-100 text-slate-700 hover:bg-slate-200' },
+            { label: 'เพิ่มลูกค้า', icon: UserPlus, color: 'bg-blue-50 text-blue-600 hover:bg-blue-100', href: '/customers?add=true' },
+            { label: 'รับออเดอร์ใหม่', icon: ShoppingBag, color: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100', href: '/orders/intake' },
+            { label: 'บันทึกที่วัดตัว', icon: Ruler, color: 'bg-amber-50 text-amber-600 hover:bg-amber-100', href: '/measurements' },
+            { label: 'สร้างใบเสนอราคา', icon: FileText, color: 'bg-violet-50 text-violet-600 hover:bg-violet-100', href: '/finance' },
+            { label: 'นัดหมายลูกค้า', icon: CalendarPlus, color: 'bg-pink-50 text-pink-600 hover:bg-pink-100', href: '/calendar' },
+            { label: 'ถ่ายภาพชุด', icon: Camera, color: 'bg-slate-100 text-slate-700 hover:bg-slate-200', href: '/media' },
           ].map((action, index) => {
             const Icon = action.icon;
             return (
-              <button
+              <Link
                 key={index}
+                href={action.href}
                 className={`flex flex-col items-center justify-center p-4 rounded-lg transition-colors duration-150 gap-2 font-semibold text-xs border border-transparent shadow-sm ${action.color}`}
               >
                 <Icon className="w-5 h-5" />
                 <span>{action.label}</span>
-              </button>
+              </Link>
             );
           })}
         </div>
