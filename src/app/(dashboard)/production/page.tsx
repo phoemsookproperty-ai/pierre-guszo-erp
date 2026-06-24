@@ -94,23 +94,38 @@ export default function ProductionKanban() {
       </section>
 
       {/* Mobile Columns Tab Selector */}
-      <div className="lg:hidden flex gap-1.5 overflow-x-auto pb-2 border-b border-slate-200 scrollbar-none">
+      <div className="lg:hidden grid grid-cols-3 gap-1.5 border-b border-slate-200 pb-2.5">
         {Object.keys(columnTitles).map((colKey) => {
           const colInfo = columnTitles[colKey];
           const jobsList = board[colKey] || [];
           const isActive = activeTab === colKey;
 
+          // Short titles for mobile tabs to guarantee they all fit on screen
+          const shortTitles: Record<string, string> = {
+            waiting_fabric: 'รอวัตถุดิบ',
+            cutting: 'คัตติ้ง',
+            sewing: 'เย็บผ้า',
+            fitting: 'ลองชุด',
+            qc: 'ตรวจ QC',
+            ready: 'พร้อมส่ง',
+          };
+
+          const displayTitle = shortTitles[colKey] || colInfo.title.split(' / ')[0];
+
           return (
             <button
               key={colKey}
               onClick={() => setActiveTab(colKey)}
-              className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap border transition-all duration-150 ${
+              className={`py-2 px-1 rounded-lg text-[10px] font-bold text-center border transition-all duration-150 truncate ${
                 isActive
                   ? 'bg-royal-navy text-white border-royal-navy shadow-sm'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
               }`}
             >
-              {colInfo.title.split(' / ')[0]} ({jobsList.length})
+              <div className="truncate">{displayTitle}</div>
+              <div className={`mt-0.5 text-[9px] ${isActive ? 'text-blue-100' : 'text-slate-400 font-semibold'}`}>
+                {jobsList.length} งาน
+              </div>
             </button>
           );
         })}
