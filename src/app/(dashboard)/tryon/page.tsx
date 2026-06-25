@@ -28,6 +28,233 @@ import CameraCapture from '@/components/tryon/camera-capture';
 import CompareMode from '@/components/tryon/compare-mode';
 import { Button } from '@/components/ui/button';
 
+const DEFAULT_STYLES = [
+  {
+    id: 'style-slim-2p-notch',
+    code: 'STYLE-SLIM-2P-NOTCH',
+    name_th: 'สูทกระดุมแถวเดียว 2 เม็ด ปก Notch (Slim Fit)',
+    name_en: 'Slim Fit Single-Breasted 2-Button Notch Lapel Suit',
+    category: 'Suit-2P',
+    fit_type: 'Slim Fit',
+    button_style: 'Single-2',
+    lapel_style: 'Notch',
+    pocket_style: 'Flap',
+    vent_style: 'Double',
+    vest_style: 'None',
+  },
+  {
+    id: 'style-classic-2p-peak',
+    code: 'STYLE-CLASSIC-2P-PEAK',
+    name_th: 'สูทกระดุมแถวเดียว 2 เม็ด ปก Peak (Classic Fit)',
+    name_en: 'Classic Fit Single-Breasted 2-Button Peak Lapel Suit',
+    category: 'Suit-2P',
+    fit_type: 'Classic Fit',
+    button_style: 'Single-2',
+    lapel_style: 'Peak',
+    pocket_style: 'Flap',
+    vent_style: 'Double',
+    vest_style: 'None',
+  },
+  {
+    id: 'style-db-tux-shawl',
+    code: 'STYLE-DB-TUX-SHAWL',
+    name_th: 'ทักซิโด้กระดุมสองแถว 6 เม็ด ปก Shawl (Tailored Fit)',
+    name_en: 'Tailored Fit Double-Breasted 6-Button Shawl Tuxedo',
+    category: 'Tuxedo',
+    fit_type: 'Tailored Fit',
+    button_style: 'Double-6',
+    lapel_style: 'Shawl',
+    pocket_style: 'Jetted',
+    vent_style: 'None',
+    vest_style: 'None',
+  },
+  {
+    id: 'style-3p-exec-peak',
+    code: 'STYLE-3P-EXEC-PEAK',
+    name_th: 'สูทสามชิ้นกระดุมแถวเดียว ปก Peak พร้อมเสื้อกั๊ก (Tailored Fit)',
+    name_en: 'Tailored Fit 3-Piece Executive Peak Lapel Suit',
+    category: 'Suit-3P',
+    fit_type: 'Tailored Fit',
+    button_style: 'Single-2',
+    lapel_style: 'Peak',
+    pocket_style: 'Flap',
+    vent_style: 'Double',
+    vest_style: 'Single-Breasted',
+  },
+  {
+    id: 'style-blazer-patch',
+    code: 'STYLE-BLAZER-PATCH',
+    name_th: 'เบลเซอร์ลำลองกระดุม 2 เม็ด กระเป๋าแปะ (Comfort Fit)',
+    name_en: 'Comfort Fit Casual Blazer with Patch Pockets',
+    category: 'Blazer',
+    fit_type: 'Comfort Fit',
+    button_style: 'Single-2',
+    lapel_style: 'Notch',
+    pocket_style: 'Patch',
+    vent_style: 'Center',
+    vest_style: 'None',
+  }
+];
+
+const DEFAULT_PATTERNS = [
+  {
+    id: 'suit-midnight-navy',
+    code: 'SUIT-MIDNIGHT-NAVY',
+    name_th: 'กรมท่าเข้ม',
+    name_en: 'Midnight Navy',
+    primary_hex: '#101B33',
+    secondary_hex: null,
+    pattern_type: 'Solid',
+    pattern_scale: 'medium',
+    pattern_description: 'กรมท่าเข้มคลาสสิก ให้ภาพลักษณ์สุขุมและเป็นทางการ',
+    recommended_shirt: 'White',
+    recommended_tie: 'Burgundy หรือ Silver',
+  },
+  {
+    id: 'suit-classic-navy',
+    code: 'SUIT-CLASSIC-NAVY',
+    name_th: 'กรมท่าคลาสสิก',
+    name_en: 'Classic Navy',
+    primary_hex: '#1D3155',
+    secondary_hex: null,
+    pattern_type: 'Solid',
+    pattern_scale: 'medium',
+    pattern_description: 'เหมาะกับการทำงานและโอกาสทางธุรกิจทั่วไป',
+    recommended_shirt: 'White หรือ Light Blue',
+    recommended_tie: 'Navy, Red',
+  },
+  {
+    id: 'suit-royal-blue',
+    code: 'SUIT-ROYAL-BLUE',
+    name_th: 'น้ำเงินรอยัล',
+    name_en: 'Royal Blue',
+    primary_hex: '#254A84',
+    secondary_hex: null,
+    pattern_type: 'Solid',
+    pattern_scale: 'medium',
+    pattern_description: 'สีสดขึ้นเล็กน้อย เหมาะกับงานแต่งและงานกลางวัน',
+    recommended_shirt: 'White',
+    recommended_tie: 'Navy หรือ Champagne',
+  },
+  {
+    id: 'suit-charcoal-grey',
+    code: 'SUIT-CHARCOAL-GREY',
+    name_th: 'เทาชาร์โคล',
+    name_en: 'Charcoal Grey',
+    primary_hex: '#3C3F45',
+    secondary_hex: null,
+    pattern_type: 'Solid',
+    pattern_scale: 'medium',
+    pattern_description: 'สีเทาเข้มสำหรับผู้บริหารและงานทางการ',
+    recommended_shirt: 'White หรือ Pale Blue',
+    recommended_tie: 'Black, Burgundy',
+  },
+  {
+    id: 'suit-medium-grey',
+    code: 'SUIT-MEDIUM-GREY',
+    name_th: 'เทากลาง',
+    name_en: 'Medium Grey',
+    primary_hex: '#686B70',
+    secondary_hex: null,
+    pattern_type: 'Solid',
+    pattern_scale: 'medium',
+    pattern_description: 'ใช้งานง่าย เหมาะกับทั้งงานกลางวันและกลางคืน',
+    recommended_shirt: 'White, Blue, Pink',
+    recommended_tie: 'Navy',
+  },
+  {
+    id: 'suit-light-grey',
+    code: 'SUIT-LIGHT-GREY',
+    name_th: 'เทาอ่อน',
+    name_en: 'Light Grey',
+    primary_hex: '#A6A8AB',
+    secondary_hex: null,
+    pattern_type: 'Solid',
+    pattern_scale: 'medium',
+    pattern_description: 'เหมาะกับอากาศร้อน งานกลางวัน และงานแต่ง',
+    recommended_shirt: 'White',
+    recommended_tie: 'Pastel Blue หรือ Pink',
+  },
+  {
+    id: 'suit-jet-black',
+    code: 'SUIT-JET-BLACK',
+    name_th: 'ดำสนิท',
+    name_en: 'Jet Black',
+    primary_hex: '#111111',
+    secondary_hex: null,
+    pattern_type: 'Solid',
+    pattern_scale: 'medium',
+    pattern_description: 'สีดำหรูสำหรับงานพิธี งานกลางคืน และงานเป็นทางการ',
+    recommended_shirt: 'White',
+    recommended_tie: 'Black',
+  },
+  {
+    id: 'suit-warm-beige',
+    code: 'SUIT-WARM-BEIGE',
+    name_th: 'เบจอุ่น',
+    name_en: 'Warm Beige',
+    primary_hex: '#B49A78',
+    secondary_hex: null,
+    pattern_type: 'Solid',
+    pattern_scale: 'medium',
+    pattern_description: 'ให้ภาพลักษณ์อบอุ่น สบาย เหมาะกับงานกลางแจ้ง',
+    recommended_shirt: 'White หรือ Cream',
+    recommended_tie: 'Brown',
+  },
+  {
+    id: 'suit-navy-pinstripe',
+    code: 'SUIT-NAVY-PINSTRIPE',
+    name_th: 'กรมท่าลายทางเล็ก',
+    name_en: 'Navy Pinstripe',
+    primary_hex: '#17243C',
+    secondary_hex: '#A7B0C0',
+    pattern_type: 'Pinstripe',
+    pattern_scale: 'small',
+    pattern_description: 'ลายเส้นแนวตั้งช่วยให้รูปร่างดูสูงและเพรียว',
+    recommended_shirt: 'White',
+    recommended_tie: 'Burgundy',
+  },
+  {
+    id: 'suit-charcoal-pinstripe',
+    code: 'SUIT-CHARCOAL-PINSTRIPE',
+    name_th: 'เทาชาร์โคลลายทาง',
+    name_en: 'Charcoal Pinstripe',
+    primary_hex: '#37393D',
+    secondary_hex: '#9DA0A4',
+    pattern_type: 'Pinstripe',
+    pattern_scale: 'small',
+    pattern_description: 'ลายทางแบบผู้บริหาร เหมาะกับงานธุรกิจระดับสูง',
+    recommended_shirt: 'White',
+    recommended_tie: 'Black หรือ Silver',
+  },
+  {
+    id: 'suit-prince-wales-grey',
+    code: 'SUIT-PRINCE-WALES-GREY',
+    name_th: 'เทาลายปรินซ์ออฟเวลส์',
+    name_en: 'Prince of Wales Grey',
+    primary_hex: '#777A7C',
+    secondary_hex: '#35383B',
+    pattern_type: 'Check',
+    pattern_scale: 'medium',
+    pattern_description: 'ลายตารางอังกฤษ ให้ลุคคลาสสิกและมีรายละเอียด',
+    recommended_shirt: 'White หรือ Light Blue',
+    recommended_tie: 'Burgundy',
+  },
+  {
+    id: 'suit-navy-windowpane',
+    code: 'SUIT-NAVY-WINDOWPANE',
+    name_th: 'กรมท่าลายตารางใหญ่',
+    name_en: 'Navy Windowpane',
+    primary_hex: '#1B2B48',
+    secondary_hex: '#7183A0',
+    pattern_type: 'Windowpane',
+    pattern_scale: 'large',
+    pattern_description: 'ลายตารางใหญ่ที่ดูทันสมัย เหมาะกับผู้ที่ต้องการความโดดเด่น',
+    recommended_shirt: 'White',
+    recommended_tie: 'Navy',
+  }
+];
+
 export default function AIVirtualTryOn() {
   const supabase = createClient();
 
@@ -51,10 +278,10 @@ export default function AIVirtualTryOn() {
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Catalog Selections
-  const [styles, setStyles] = useState<any[]>([]);
-  const [patterns, setPatterns] = useState<any[]>([]);
-  const [selectedStyle, setSelectedStyle] = useState<any | null>(null);
-  const [selectedPattern, setSelectedPattern] = useState<any | null>(null);
+  const [styles, setStyles] = useState<any[]>(DEFAULT_STYLES);
+  const [patterns, setPatterns] = useState<any[]>(DEFAULT_PATTERNS);
+  const [selectedStyle, setSelectedStyle] = useState<any | null>(DEFAULT_STYLES[0]);
+  const [selectedPattern, setSelectedPattern] = useState<any | null>(DEFAULT_PATTERNS[0]);
   
   // Generation Settings
   const [numImages, setNumImages] = useState<number>(2);
@@ -86,7 +313,11 @@ export default function AIVirtualTryOn() {
         .select('*')
         .eq('is_active', true);
       
-      if (stylesData) setStyles(stylesData);
+      if (stylesData && stylesData.length > 0) {
+        setStyles(stylesData);
+      } else {
+        setStyles(DEFAULT_STYLES);
+      }
 
       const { data: patternsData } = await supabase
         .from('suit_color_patterns')
@@ -94,9 +325,15 @@ export default function AIVirtualTryOn() {
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 
-      if (patternsData) setPatterns(patternsData);
+      if (patternsData && patternsData.length > 0) {
+        setPatterns(patternsData);
+      } else {
+        setPatterns(DEFAULT_PATTERNS);
+      }
     } catch (e) {
       console.error(e);
+      setStyles(DEFAULT_STYLES);
+      setPatterns(DEFAULT_PATTERNS);
     }
   };
 
