@@ -73,7 +73,8 @@ export class OpenAIAdapter implements VirtualTryOnProvider {
     try {
       // 1. Analyze the face and pose of the client photo using GPT-4o-mini (Vision)
       let personDescription = '';
-      if (input.sourceImageUrl) {
+      const isBase64 = input.sourceImageUrl?.startsWith('data:image');
+      if (input.sourceImageUrl && !isBase64) {
         try {
           const visionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
