@@ -255,6 +255,289 @@ const DEFAULT_PATTERNS = [
   }
 ];
 
+const generateCompositeImage = (
+  sourceUrl: string,
+  colorHex: string,
+  patternType: string,
+  style: any
+): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = sourceUrl;
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(sourceUrl);
+          return;
+        }
+
+        // Set size to match the source image
+        canvas.width = img.naturalWidth || img.width || 600;
+        canvas.height = img.naturalHeight || img.height || 800;
+
+        // Draw original user photo
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const w = canvas.width;
+        const h = canvas.height;
+
+        // The silhouette guide expects the head around cy = 0.2 * h, r = 0.075 * h
+        // Neck is around cy = 0.27 * h to 0.31 * h
+        // Shoulders are around Y = 0.31 * h
+        const neckLeft = w * 0.4625;
+        const neckRight = w * 0.5375;
+        const neckTop = h * 0.275;
+        const neckBottom = h * 0.308;
+
+        const shoulderLeft = w * 0.25;
+        const shoulderRight = w * 0.75;
+        const shoulderY = h * 0.35;
+
+        const bodyLeft = w * 0.28;
+        const bodyRight = w * 0.72;
+        const bodyBottom = h;
+
+        // 1. Draw White Shirt (V-Neck area)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.465, neckTop);
+        ctx.lineTo(w * 0.535, neckTop);
+        ctx.lineTo(w * 0.50, h * 0.45); // deep V-neck
+        ctx.closePath();
+        ctx.fill();
+
+        // Draw collar lines for shirt V-neck
+        ctx.strokeStyle = '#E2E8F0';
+        ctx.lineWidth = Math.max(1, w * 0.003);
+        ctx.beginPath();
+        ctx.moveTo(w * 0.465, neckTop);
+        ctx.lineTo(w * 0.49, h * 0.35);
+        ctx.lineTo(w * 0.50, h * 0.35);
+        ctx.lineTo(w * 0.51, h * 0.35);
+        ctx.lineTo(w * 0.535, neckTop);
+        ctx.stroke();
+
+        // 2. Draw Tie (Elegant Red/Gold Tie)
+        ctx.fillStyle = '#9B2C2C'; // Dark Red Tie
+        ctx.beginPath();
+        ctx.moveTo(w * 0.49, h * 0.30);
+        ctx.lineTo(w * 0.51, h * 0.30);
+        ctx.lineTo(w * 0.515, h * 0.42);
+        ctx.lineTo(w * 0.50, h * 0.47); // Point of the tie
+        ctx.lineTo(w * 0.485, h * 0.42);
+        ctx.closePath();
+        ctx.fill();
+
+        // Tie knot
+        ctx.fillStyle = '#742A2A';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.485, h * 0.30);
+        ctx.lineTo(w * 0.515, h * 0.30);
+        ctx.lineTo(w * 0.51, h * 0.33);
+        ctx.lineTo(w * 0.49, h * 0.33);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3. Draw Suit Jacket main body
+        ctx.save();
+        
+        ctx.fillStyle = colorHex || '#101B33';
+        ctx.beginPath();
+        // Start from neck left
+        ctx.moveTo(neckLeft, neckBottom);
+        // Curve to left shoulder
+        ctx.quadraticCurveTo(w * 0.35, h * 0.31, shoulderLeft, shoulderY);
+        // Down left side
+        ctx.lineTo(bodyLeft, bodyBottom);
+        // Across bottom
+        ctx.lineTo(bodyRight, bodyBottom);
+        // Up right side
+        ctx.lineTo(shoulderRight, shoulderY);
+        // Curve to neck right
+        ctx.quadraticCurveTo(w * 0.65, h * 0.31, neckRight, neckBottom);
+        // Deep V-neck cut
+        ctx.lineTo(w * 0.50, h * 0.45);
+        ctx.closePath();
+        ctx.fill();
+
+        // Clip to the jacket area to apply patterns & shading
+        ctx.clip();
+
+        // Draw Pattern
+        if (patternType === 'Pinstripe') {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = Math.max(1, w * 0.002);
+          const spacing = w * 0.025;
+          for (let x = -w; x < w * 2; x += spacing) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x + w * 0.1, h); // slightly angled vertical lines
+            ctx.stroke();
+          }
+        } else if (patternType === 'Check' || patternType === 'Windowpane') {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+          ctx.lineWidth = Math.max(1, w * 0.0015);
+          const spacing = patternType === 'Windowpane' ? w * 0.08 : w * 0.04;
+          // Vertical lines
+          for (let x = -w; x < w * 2; x += spacing) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x + w * 0.05, h);
+            ctx.stroke();
+          }
+          // Horizontal lines
+          for (let y = 0; y < h; y += spacing) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+          }
+        } else if (patternType === 'Herringbone') {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+          ctx.lineWidth = Math.max(1, w * 0.001);
+          const size = w * 0.01;
+          for (let y = 0; y < h; y += size) {
+            ctx.beginPath();
+            for (let x = 0; x < w; x += size * 2) {
+              ctx.moveTo(x, y);
+              ctx.lineTo(x + size, y + size);
+              ctx.lineTo(x + size * 2, y);
+            }
+            ctx.stroke();
+          }
+        }
+
+        // Draw Shading & Shadows (3D depth)
+        // Shoulder highlights
+        const shoulderGrad = ctx.createLinearGradient(0, h * 0.3, 0, h * 0.45);
+        shoulderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+        shoulderGrad.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+        ctx.fillStyle = shoulderGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Side shadows
+        const sideGrad = ctx.createLinearGradient(shoulderLeft, 0, shoulderRight, 0);
+        sideGrad.addColorStop(0, 'rgba(0, 0, 0, 0.25)');
+        sideGrad.addColorStop(0.15, 'rgba(0, 0, 0, 0)');
+        sideGrad.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
+        sideGrad.addColorStop(0.85, 'rgba(0, 0, 0, 0)');
+        sideGrad.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
+        ctx.fillStyle = sideGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.restore();
+
+        // 4. Draw Lapels (Over the jacket body)
+        ctx.fillStyle = colorHex || '#101B33';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = Math.max(1, w * 0.002);
+
+        // Left Lapel
+        ctx.beginPath();
+        ctx.moveTo(w * 0.47, neckTop);
+        ctx.lineTo(w * 0.42, h * 0.35); // outer corner
+        if (style?.lapel_style === 'Peak') {
+          ctx.lineTo(w * 0.39, h * 0.335); // peak accent out
+          ctx.lineTo(w * 0.425, h * 0.35); // peak accent in
+        } else {
+          // Notch lapel
+          ctx.lineTo(w * 0.435, h * 0.355); // notch cut
+          ctx.lineTo(w * 0.42, h * 0.36); // back down
+        }
+        ctx.lineTo(w * 0.49, h * 0.45); // deep lapel tip
+        ctx.lineTo(w * 0.49, neckBottom);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Right Lapel
+        ctx.beginPath();
+        ctx.moveTo(w * 0.53, neckTop);
+        ctx.lineTo(w * 0.58, h * 0.35); // outer corner
+        if (style?.lapel_style === 'Peak') {
+          ctx.lineTo(w * 0.61, h * 0.335); // peak accent out
+          ctx.lineTo(w * 0.575, h * 0.35); // peak accent in
+        } else {
+          // Notch lapel
+          ctx.lineTo(w * 0.565, h * 0.355); // notch cut
+          ctx.lineTo(w * 0.58, h * 0.36); // back down
+        }
+        ctx.lineTo(w * 0.51, h * 0.45); // deep lapel tip
+        ctx.lineTo(w * 0.51, neckBottom);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw lapel fold shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.42, h * 0.35);
+        ctx.lineTo(w * 0.47, h * 0.35);
+        ctx.lineTo(w * 0.49, h * 0.45);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(w * 0.58, h * 0.35);
+        ctx.lineTo(w * 0.53, h * 0.35);
+        ctx.lineTo(w * 0.51, h * 0.45);
+        ctx.closePath();
+        ctx.fill();
+
+        // 5. Draw Buttons & Center Line
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.lineWidth = Math.max(1, w * 0.001);
+        ctx.beginPath();
+        ctx.moveTo(w * 0.50, h * 0.45);
+        ctx.lineTo(w * 0.50, h);
+        ctx.stroke();
+
+        // Buttons
+        ctx.fillStyle = '#1E293B';
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = Math.max(1, w * 0.0005);
+        const drawButton = (bx: number, by: number) => {
+          ctx.beginPath();
+          ctx.arc(bx, by, w * 0.012, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        };
+
+        if (style?.button_style === 'Double-6') {
+          // Double breasted buttons (6 buttons in 3 pairs)
+          drawButton(w * 0.46, h * 0.50);
+          drawButton(w * 0.54, h * 0.50);
+          drawButton(w * 0.46, h * 0.56);
+          drawButton(w * 0.54, h * 0.56);
+          drawButton(w * 0.46, h * 0.62);
+          drawButton(w * 0.54, h * 0.62);
+        } else {
+          // Single breasted (2 buttons)
+          drawButton(w * 0.50, h * 0.52);
+          drawButton(w * 0.50, h * 0.60);
+        }
+
+        // Pocket detail
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(w * 0.33, h * 0.38, w * 0.08, h * 0.02); // Left breast pocket
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeRect(w * 0.33, h * 0.38, w * 0.08, h * 0.02);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.95));
+      } catch (err) {
+        console.error(err);
+        resolve(sourceUrl);
+      }
+    };
+    img.onerror = () => {
+      resolve(sourceUrl);
+    };
+  });
+};
+
 export default function AIVirtualTryOn() {
   const supabase = createClient();
 
@@ -579,30 +862,57 @@ export default function AIVirtualTryOn() {
       progress += 15;
       if (progress >= 100) {
         clearInterval(interval);
-        setGenerationProgress(100);
-        setGenerationStatus('completed');
         
-        // Mock results matching the selection
-        const images = [];
-        const suitMockImages = [
-          'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=600&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1593032465175-481ac7f401a0?q=80&w=600&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?q=80&w=600&auto=format&fit=crop',
-          'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop',
-        ];
+        const renderMockImages = async () => {
+          const images = [];
+          if (sourcePreviewUrl) {
+            try {
+              const compositeUrl = await generateCompositeImage(
+                sourcePreviewUrl,
+                selectedPattern?.primary_hex || '#101B33',
+                selectedPattern?.pattern_type || 'Solid',
+                selectedStyle
+              );
+              for (let i = 0; i < numImages; i++) {
+                images.push({
+                  id: `client_res_${Math.random().toString(36).substring(2, 9)}_${i}`,
+                  session_id: sessionId,
+                  output_image_path: compositeUrl,
+                  is_favorite: false,
+                  is_selected: false,
+                });
+              }
+            } catch (err) {
+              console.error("Failed to generate composite image:", err);
+            }
+          }
+          
+          if (images.length === 0) {
+            const suitMockImages = [
+              'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=600&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1593032465175-481ac7f401a0?q=80&w=600&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?q=80&w=600&auto=format&fit=crop',
+              'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop',
+            ];
+            for (let i = 0; i < numImages; i++) {
+              const baseImg = suitMockImages[(i + Math.floor(Math.random() * 4)) % suitMockImages.length];
+              images.push({
+                id: `client_res_${Math.random().toString(36).substring(2, 9)}_${i}`,
+                session_id: sessionId,
+                output_image_path: `${baseImg}&idx=${i}&color=${encodeURIComponent(selectedPattern?.primary_hex || '')}`,
+                is_favorite: false,
+                is_selected: false,
+              });
+            }
+          }
+          
+          setTryonResults(images);
+          setGenerationProgress(100);
+          setGenerationStatus('completed');
+          setActiveStep(5);
+        };
         
-        for (let i = 0; i < numImages; i++) {
-          const baseImg = suitMockImages[(i + Math.floor(Math.random() * 4)) % suitMockImages.length];
-          images.push({
-            id: `client_res_${Math.random().toString(36).substring(2, 9)}`,
-            session_id: sessionId,
-            output_image_path: `${baseImg}&idx=${i}&color=${encodeURIComponent(selectedPattern.primary_hex)}`,
-            is_favorite: false,
-            is_selected: false,
-          });
-        }
-        setTryonResults(images);
-        setActiveStep(5);
+        renderMockImages();
       } else {
         setGenerationProgress(progress);
       }
@@ -710,7 +1020,23 @@ export default function AIVirtualTryOn() {
         .eq('session_id', sessionId);
 
       if (error) throw error;
-      setTryonResults(data || []);
+      
+      const rawResults = data || [];
+      if (providerName === 'Mock' && sourcePreviewUrl && rawResults.length > 0) {
+        const compositeUrl = await generateCompositeImage(
+          sourcePreviewUrl,
+          selectedPattern?.primary_hex || '#101B33',
+          selectedPattern?.pattern_type || 'Solid',
+          selectedStyle
+        );
+        const mapped = rawResults.map((r: any) => ({
+          ...r,
+          output_image_path: compositeUrl,
+        }));
+        setTryonResults(mapped);
+      } else {
+        setTryonResults(rawResults);
+      }
     } catch (e) {
       console.error(e);
     }
