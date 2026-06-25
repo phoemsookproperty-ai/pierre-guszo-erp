@@ -20,6 +20,7 @@ import {
   ChevronsLeftRight,
   X,
   Sparkles,
+  Cpu,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BrandLogo from './brand-logo';
@@ -67,6 +68,7 @@ const menuItems = [
       { name: 'คลังรูปภาพ', href: '/media', icon: Image },
       { name: 'ผู้ใช้งาน / สิทธิ์', href: '/settings/users', icon: UserCheck },
       { name: 'ตั้งค่า', href: '/settings/general', icon: Settings },
+      { name: 'ตั้งค่า AI', href: '/settings/ai', icon: Cpu },
       { name: 'สำรองข้อมูล', href: '/settings/backup', icon: Database },
     ],
   },

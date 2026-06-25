@@ -19,6 +19,7 @@ const titleMap: Record<string, string> = {
   '/media': 'คลังรูปภาพและไฟล์ / Media Library',
   '/settings/users': 'จัดการผู้ใช้งานและสิทธิ์ / Staff & RBAC',
   '/settings/general': 'ตั้งค่าระบบทั่วไป / General Settings',
+  '/settings/ai': 'ตั้งค่าโมเดล AI / AI Settings',
   '/settings/backup': 'ระบบสำรองข้อมูล / Backup Settings',
 };
 

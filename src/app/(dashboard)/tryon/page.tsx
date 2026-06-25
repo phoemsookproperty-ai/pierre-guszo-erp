@@ -1384,7 +1384,6 @@ export default function AIVirtualTryOn() {
                     <option value={4}>4 ภาพ (High-end Selection)</option>
                   </select>
                 </div>
-
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">AI Provider Engine</label>
                   <select
@@ -1395,6 +1394,8 @@ export default function AIVirtualTryOn() {
                     <option value="Mock">Mock Model (ฟรี - ทันที)</option>
                     <option value="Fal">Fal IDM-VTON (0.015 USD/รูป)</option>
                     <option value="Fashn">Fashn Professional (0.050 USD/รูป)</option>
+                    <option value="OpenAI">OpenAI DALL-E 3 (0.040 USD/รูป)</option>
+                    <option value="Replicate">Replicate IDM-VTON (0.025 USD/รูป)</option>
                   </select>
                 </div>
               </div>

@@ -1,4 +1,8 @@
-import { getProviderAdapter } from './adapters/mock';
+import { MockAdapter } from './adapters/mock';
+import { FalAdapter } from './adapters/fal';
+import { FashnAdapter } from './adapters/fashn';
+import { OpenAIAdapter } from './adapters/openai';
+import { ReplicateAdapter } from './adapters/replicate';
 
 export interface TryOnGenerationInput {
   sessionId: string;
@@ -44,9 +48,18 @@ export interface VirtualTryOnProvider {
  * Server-Side dynamic registry to load Virtual Try-On API adapters.
  */
 export function getProvider(providerName: string): VirtualTryOnProvider {
-  // Currently redirecting everything through getProviderAdapter
-  // (which handles Mock and has adapters for others)
-  return getProviderAdapter(providerName);
+  switch (providerName) {
+    case 'Fal':
+      return new FalAdapter();
+    case 'Fashn':
+      return new FashnAdapter();
+    case 'OpenAI':
+      return new OpenAIAdapter();
+    case 'Replicate':
+      return new ReplicateAdapter();
+    default:
+      return new MockAdapter();
+  }
 }
 
 /**
