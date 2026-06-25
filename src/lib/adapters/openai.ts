@@ -108,11 +108,6 @@ The person should be shown in a natural, confident pose, facing the camera. The 
         size: cleanModelName === 'dall-e-2' ? '512x512' : '1024x1024',
       };
 
-      if (cleanModelName === 'dall-e-3') {
-        requestPayload.quality = 'hd';
-        requestPayload.style = 'natural';
-      }
-
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
