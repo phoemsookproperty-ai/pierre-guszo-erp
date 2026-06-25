@@ -27,6 +27,22 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
     }
 
+    const isMockSession = sessionId.startsWith('mock_sess_');
+
+    if (isMockSession) {
+      const providerName = searchParams.get('provider') || 'Mock';
+      const providerInstance = getProvider(providerName);
+      const statusResult = await providerInstance.getStatus(jobId);
+
+      return NextResponse.json({
+        success: true,
+        status: statusResult.status,
+        progressPct: statusResult.progressPct || 0,
+        outputImageUrls: statusResult.outputImageUrls || [],
+        error: statusResult.error,
+      });
+    }
+
     // 2. Fetch session detail
     const { data: session, error: sessionError } = await supabase
       .from('ai_tryon_sessions')

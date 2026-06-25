@@ -919,6 +919,16 @@ export default function AIVirtualTryOn() {
     }, 800);
   };
 
+  // Helper to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   // Trigger AI generation
   const handleTriggerAI = async () => {
     if (!sessionId || !selectedStyle || !selectedPattern) return;
@@ -927,12 +937,21 @@ export default function AIVirtualTryOn() {
     setErrorMessage(null);
     setActiveStep(4);
 
-    if (sessionId.startsWith('mock_sess_')) {
+    if (sessionId?.startsWith('mock_sess_') && providerName === 'Mock') {
       simulateClientSideGeneration();
       return;
     }
 
     try {
+      let clientSourceUrl = '';
+      if (sourceImage) {
+        try {
+          clientSourceUrl = await fileToBase64(sourceImage);
+        } catch (err) {
+          console.error("Failed to convert image to base64:", err);
+        }
+      }
+
       const reqPayload = {
         suit_style_id: selectedStyle.id,
         color_pattern_id: selectedPattern.id,
@@ -942,6 +961,7 @@ export default function AIVirtualTryOn() {
         preserve_background: preserveBackground,
         background_mode: preserveBackground ? 'original' : 'studio',
         provider_name: providerName,
+        source_image_url: clientSourceUrl || sourcePreviewUrl || '',
       };
 
       const res = await fetch(`/api/ai-tryon/sessions/${sessionId}/generate`, {
@@ -956,11 +976,23 @@ export default function AIVirtualTryOn() {
       setJobId(data.job_id);
 
       if (data.status === 'completed') {
-        // Mock provider resolves immediately sometimes
         setGenerationProgress(100);
         setGenerationStatus('completed');
-        fetchResults();
-        setActiveStep(5);
+        
+        if (sessionId?.startsWith('mock_sess_') && data.outputImageUrls) {
+          const images = data.outputImageUrls.map((url: string, i: number) => ({
+            id: `client_res_${Math.random().toString(36).substring(2, 9)}_${i}`,
+            session_id: sessionId,
+            output_image_path: url,
+            is_favorite: false,
+            is_selected: false,
+          }));
+          setTryonResults(images);
+          setActiveStep(5);
+        } else {
+          fetchResults();
+          setActiveStep(5);
+        }
       } else {
         // Begin queue status polling
         pollQueueStatus(data.job_id);
@@ -986,7 +1018,7 @@ export default function AIVirtualTryOn() {
       }
 
       try {
-        const res = await fetch(`/api/ai-tryon/sessions/${sessionId}/status?job_id=${jobIdString}`);
+        const res = await fetch(`/api/ai-tryon/sessions/${sessionId}/status?job_id=${jobIdString}&provider=${providerName}`);
         const data = await res.json();
 
         if (data.status === 'processing') {
@@ -995,8 +1027,21 @@ export default function AIVirtualTryOn() {
           clearInterval(intervalId);
           setGenerationProgress(100);
           setGenerationStatus('completed');
-          fetchResults();
-          setActiveStep(5);
+          
+          if (sessionId?.startsWith('mock_sess_') && data.outputImageUrls) {
+            const images = data.outputImageUrls.map((url: string, i: number) => ({
+              id: `client_res_${Math.random().toString(36).substring(2, 9)}_${i}`,
+              session_id: sessionId,
+              output_image_path: url,
+              is_favorite: false,
+              is_selected: false,
+            }));
+            setTryonResults(images);
+            setActiveStep(5);
+          } else {
+            fetchResults();
+            setActiveStep(5);
+          }
         } else if (data.status === 'failed') {
           clearInterval(intervalId);
           setErrorMessage(data.error || 'การประมวลผลของ AI Adapter ล้มเหลว');

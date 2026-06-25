@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getProvider, buildGarmentPrompt } from '@/lib/tryon';
+import { getProvider, buildGarmentPrompt, DEFAULT_STYLES, DEFAULT_PATTERNS } from '@/lib/tryon';
 import { checkBudgetLimit } from '@/lib/budget';
+import { cookies } from 'next/headers';
 
 export async function POST(
   request: Request,
@@ -9,8 +10,107 @@ export async function POST(
 ) {
   try {
     const { id: sessionId } = await params;
+    const cookieStore = await cookies();
+    const isMockMode = cookieStore.get('sb-mock-token')?.value === 'true';
+    const isMockSession = sessionId.startsWith('mock_sess_') || isMockMode;
+
     const supabase = await createClient();
 
+    // =========================================================================
+    // BYPASS PATH FOR DEMO / SANDBOX / MOCK SESSIONS (DATABASE-FREE)
+    // =========================================================================
+    if (isMockSession) {
+      const body = await request.json();
+      const {
+        suit_style_id,
+        color_pattern_id,
+        generation_count = 1,
+        preserve_face: preserveFace = 'medium',
+        preserve_hair: preserveHair = true,
+        preserve_body: preserveBody = true,
+        preserve_pose: preservePose = true,
+        preserve_background: preserveBackground = false,
+        background_mode: backgroundMode = 'studio',
+        provider_name = 'Mock',
+        source_image_url,
+      } = body;
+
+      if (!suit_style_id || !color_pattern_id) {
+        return NextResponse.json(
+          { error: 'suit_style_id and color_pattern_id are required' },
+          { status: 400 }
+        );
+      }
+
+      // Fetch styles & patterns from DB or fallback to constants
+      let style = null;
+      let pattern = null;
+
+      try {
+        const { data: styleData } = await supabase
+          .from('suit_styles')
+          .select('*')
+          .eq('id', suit_style_id)
+          .single();
+        style = styleData;
+      } catch (_) {}
+
+      if (!style) {
+        style = DEFAULT_STYLES.find(s => s.id === suit_style_id || s.code === suit_style_id);
+      }
+
+      try {
+        const { data: patternData } = await supabase
+          .from('suit_color_patterns')
+          .select('*')
+          .eq('id', color_pattern_id)
+          .single();
+        pattern = patternData;
+      } catch (_) {}
+
+      if (!pattern) {
+        pattern = DEFAULT_PATTERNS.find(p => p.id === color_pattern_id || p.code === color_pattern_id);
+      }
+
+      if (!style || !pattern) {
+        return NextResponse.json(
+          { error: 'Invalid style or pattern selected' },
+          { status: 404 }
+        );
+      }
+
+      const providerInstance = getProvider(provider_name);
+      const generationResult = await providerInstance.generate({
+        sessionId,
+        sourceImageUrl: source_image_url || '',
+        garmentType: style.category,
+        fitType: style.fit_type,
+        styleDetails: buildGarmentPrompt(style, pattern),
+        colorHex: pattern.primary_hex,
+        patternType: pattern.pattern_type,
+        patternDesc: pattern.pattern_description || '',
+        preserveFace,
+        preserveHair,
+        preserveBody,
+        preservePose,
+        preserveBackground,
+        backgroundMode,
+        numImages: generation_count,
+      });
+
+      return NextResponse.json({
+        success: true,
+        job_id: generationResult.providerJobId,
+        status: generationResult.status,
+        outputImageUrls: generationResult.outputImageUrls || [],
+        error: generationResult.error,
+      });
+    }
+
+    // =========================================================================
+    // STANDARD PRODUCTION PATH (RLS & PERSISTENT DB CHECKS)
+    // =========================================================================
+    
     // 1. Auth check
     const {
       data: { user },
