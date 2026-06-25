@@ -143,20 +143,25 @@ Suit details:
 The person should be shown in a natural, confident pose, facing the camera. The background should be a clean, minimalist professional photography studio background. Keep the person's face, features, and hairstyle as close to the reference photo as possible, integrating the suit seamlessly.`;
       }
  
+      const requestPayload: any = {
+        model: modelName || 'dall-e-3',
+        prompt: prompt,
+        n: 1,
+        size: modelName === 'dall-e-2' ? '512x512' : '1024x1024',
+      };
+
+      if (modelName !== 'dall-e-2') {
+        requestPayload.quality = 'hd';
+        requestPayload.style = 'natural';
+      }
+
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model: modelName || 'dall-e-3',
-          prompt: prompt,
-          n: 1,
-          size: modelName === 'dall-e-2' ? '512x512' : '1024x1024',
-          quality: modelName === 'dall-e-2' ? 'standard' : 'hd',
-          style: 'natural',
-        }),
+        body: JSON.stringify(requestPayload),
       });
  
       const data = await response.json();
