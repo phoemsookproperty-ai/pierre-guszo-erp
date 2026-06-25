@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Coins,
   Percent,
+  Sparkles,
 } from 'lucide-react';
 
 const mockCustomers = [
@@ -150,12 +151,21 @@ export default function OrderIntake() {
                     ))}
                   </select>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between">
-                  <div className="text-xs text-slate-500">หากลูกค้าใหม่ที่ยังไม่เคยมีประวัติการวัดตัวในร้าน:</div>
-                  <button className="flex items-center gap-1 text-xs font-bold text-royal-navy bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50">
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>ลงทะเบียนลูกค้าด่วน</span>
-                  </button>
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                  <div className="text-xs text-slate-500">ใช้ AI จำลองเสื้อผ้าลองสูทเสมือนจริงเพื่อเป็นตัวเลือกในการดีไซน์:</div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => router.push(`/tryon?customer_id=${selectedCustomerId}`)}
+                      className="flex items-center gap-1.5 text-xs font-bold text-royal-navy bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-royal-navy animate-pulse" />
+                      <span>ลองสูทด้วย AI</span>
+                    </button>
+                    <button className="flex items-center gap-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>ลงทะเบียนลูกค้าด่วน</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

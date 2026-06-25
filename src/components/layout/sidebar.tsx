@@ -19,6 +19,7 @@ import {
   Database,
   ChevronsLeftRight,
   X,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BrandLogo from './brand-logo';
@@ -42,6 +43,7 @@ const menuItems = [
     title: 'งานวัดตัว / ผลิต',
     items: [
       { name: 'ใบวัดตัว', href: '/measurements', icon: Ruler },
+      { name: 'ลองสูทเสมือนด้วย AI', href: '/tryon', icon: Sparkles },
       { name: 'งานดำเนินการ', href: '/production', icon: Scissors },
       { name: 'วันนัด / ปฏิทิน', href: '/calendar', icon: Calendar },
     ],
