@@ -34,6 +34,7 @@ export async function POST(
         provider_name = 'Mock',
         source_image_url,
         garment_image_url,
+        person_description,
       } = body;
 
       if (!suit_style_id || !color_pattern_id) {
@@ -98,6 +99,7 @@ export async function POST(
         preserveBackground,
         backgroundMode,
         numImages: generation_count,
+        personDescription: person_description || '',
       });
 
       if (generationResult.status === 'failed') {
@@ -190,6 +192,7 @@ export async function POST(
       background_mode: backgroundMode = 'studio',
       provider_name = 'Mock', // Default fallback
       garment_image_url,
+      person_description,
     } = body;
 
     if (!suit_style_id || !color_pattern_id) {
@@ -279,6 +282,7 @@ export async function POST(
       preserveBackground,
       backgroundMode,
       numImages: generation_count,
+      personDescription: person_description || '',
     });
 
     if (generationResult.status === 'failed') {

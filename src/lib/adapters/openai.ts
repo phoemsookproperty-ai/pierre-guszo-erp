@@ -71,59 +71,14 @@ export class OpenAIAdapter implements VirtualTryOnProvider {
     const modelName = await this.getModelName();
 
     try {
-      // 1. Analyze the face and pose of the client photo using GPT-4o-mini (Vision)
-      let personDescription = '';
-      const isBase64 = input.sourceImageUrl?.startsWith('data:image');
-      if (input.sourceImageUrl && !isBase64) {
-        try {
-          const visionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [
-                {
-                  role: 'user',
-                  content: [
-                    {
-                      type: 'text',
-                      text: 'Please describe the person in this image in detail so a text-to-image model can recreate them. Focus on their face shape, eyes, hair color and style, skin tone, facial hair, gender, approximate age, pose/posture, and the background. Keep it concise but highly descriptive (approx. 2-3 sentences). Do not mention what they are wearing, as we will replace their clothes.'
-                    },
-                    {
-                      type: 'image_url',
-                      image_url: {
-                        url: input.sourceImageUrl
-                      }
-                    }
-                  ]
-                }
-              ],
-              max_tokens: 300
-            })
-          });
-
-          const visionData = await visionResponse.json();
-          if (visionResponse.ok) {
-            personDescription = visionData.choices?.[0]?.message?.content || '';
-          } else {
-            console.warn('GPT-4o Vision description call failed:', visionData.error?.message);
-          }
-        } catch (err) {
-          console.warn('Failed to call GPT-4o Vision description:', err);
-        }
-      }
-
       const styleDesc = input.styleDetails || `${input.fitType} suit`;
       const patternDetail = input.patternType !== 'Solid' ? `${input.patternType} (${input.patternDesc})` : 'solid color';
       
       let prompt = '';
-      if (personDescription) {
+      if (input.personDescription) {
         prompt = `A professional, high-end luxury studio portrait photograph of a client.
 Appearance of the person:
-${personDescription}
+${input.personDescription}
 The person must be wearing a premium, bespoke tailored suit.
 Suit details:
 - Style: ${styleDesc}

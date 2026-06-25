@@ -1302,6 +1302,34 @@ export default function AIVirtualTryOn() {
         console.error("Failed to generate garment only image:", err);
       }
 
+      // Step 1: Vision description if OpenAI provider
+      let personDescription = '';
+      if (providerName === 'OpenAI') {
+        setGenerationStatus('generating');
+        setGenerationProgress(20);
+        
+        try {
+          const descRes = await fetch(`/api/ai-tryon/sessions/${sessionId}/describe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              source_image_url: clientSourceUrl || sourcePreviewUrl || '',
+            }),
+          });
+          const descData = await descRes.json();
+          if (!descRes.ok) throw new Error(descData.error || 'Failed to analyze person image');
+          personDescription = descData.description;
+          setGenerationProgress(50);
+        } catch (err: any) {
+          console.error("Vision describe error:", err);
+          // Don't fail the whole try-on, fallback to prompt template in adapter
+        }
+      }
+
+      // Step 2: Call generate API
+      setGenerationStatus('generating');
+      setGenerationProgress(60);
+
       const reqPayload = {
         suit_style_id: selectedStyle.id,
         color_pattern_id: selectedPattern.id,
@@ -1313,6 +1341,7 @@ export default function AIVirtualTryOn() {
         provider_name: providerName,
         source_image_url: clientSourceUrl || sourcePreviewUrl || '',
         garment_image_url: clientGarmentUrl || '',
+        person_description: personDescription,
       };
 
       const res = await fetch(`/api/ai-tryon/sessions/${sessionId}/generate`, {
@@ -1858,7 +1887,16 @@ export default function AIVirtualTryOn() {
               />
             </div>
             <div className="flex justify-between text-[10px] font-bold text-slate-500 px-1">
-              <span>สถานะ: {generationStatus === 'generating' ? 'กำลังคำนวณสัดส่วน...' : 'กำลังรอคิว API...'}</span>
+              <span>
+                สถานะ:{' '}
+                {generationStatus === 'generating'
+                  ? providerName === 'OpenAI' && generationProgress < 50
+                    ? 'กำลังวิเคราะห์โครงร่างด้วย GPT-4o Vision...'
+                    : providerName === 'OpenAI'
+                    ? 'กำลังตัดเย็บสูทสามมิติด้วย DALL-E 3...'
+                    : 'กำลังคำนวณสัดส่วน...'
+                  : 'กำลังรอคิว API...'}
+              </span>
               <span>{generationProgress}%</span>
             </div>
           </div>

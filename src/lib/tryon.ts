@@ -233,6 +233,7 @@ export interface TryOnGenerationInput {
   sessionId: string;
   sourceImageUrl: string;
   garmentImageUrl?: string;
+  personDescription?: string;
   garmentType: string;
   fitType: string;
   styleDetails: string;
