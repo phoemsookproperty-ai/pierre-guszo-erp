@@ -1,5 +1,6 @@
 import { TryOnGenerationInput, TryOnGenerationResult, TryOnJobStatus, VirtualTryOnProvider } from '../tryon';
 import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 
 const STOCK_GARMENTS: Record<string, string> = {
   'navy': 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=600&auto=format&fit=crop',
@@ -25,6 +26,18 @@ function getGarmentImageUrl(colorHex: string): string {
 export class ReplicateAdapter implements VirtualTryOnProvider {
   private async getApiKey(): Promise<string> {
     try {
+      const cookieStore = await cookies();
+      const demoSettingsStr = cookieStore.get('sb-demo-ai-settings')?.value;
+      if (demoSettingsStr) {
+        try {
+          const settings = JSON.parse(demoSettingsStr);
+          const providerSetting = settings.find((s: any) => s.provider === 'Replicate');
+          if (providerSetting?.configuration?.api_key) {
+            return providerSetting.configuration.api_key;
+          }
+        } catch (_) {}
+      }
+
       const supabase = await createClient();
       const { data } = await supabase
         .from('ai_provider_settings')
@@ -53,7 +66,6 @@ export class ReplicateAdapter implements VirtualTryOnProvider {
     const category = input.garmentType.toLowerCase().includes('trouser') ? 'lower_body' : 'upper_body';
 
     try {
-      // Replicate IDM-VTON model version hash
       const modelVersion = 'da77198e0e935a4d6b637d7ef20da62f7902d1847e0ab021b021319760777b73';
 
       const response = await fetch('https://api.replicate.com/v1/predictions', {
@@ -116,7 +128,7 @@ export class ReplicateAdapter implements VirtualTryOnProvider {
         throw new Error(data.detail || 'Failed to fetch status from Replicate');
       }
 
-      const status = data.status; // starting, processing, succeeded, failed, canceled
+      const status = data.status;
 
       if (status === 'starting') {
         return {
@@ -143,7 +155,6 @@ export class ReplicateAdapter implements VirtualTryOnProvider {
       }
 
       if (status === 'succeeded') {
-        // Replicate output is typically an array of string URLs or a string
         const output = data.output;
         let outputUrl = '';
         

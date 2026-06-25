@@ -1,5 +1,6 @@
 import { TryOnGenerationInput, TryOnGenerationResult, TryOnJobStatus, VirtualTryOnProvider } from '../tryon';
 import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 
 const STOCK_GARMENTS: Record<string, string> = {
   'navy': 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=600&auto=format&fit=crop',
@@ -9,7 +10,6 @@ const STOCK_GARMENTS: Record<string, string> = {
 };
 
 function getGarmentImageUrl(colorHex: string): string {
-  // Simple heuristic to map color to closest stock garment photo
   const hex = (colorHex || '#101B33').toLowerCase();
   if (hex === '#101b33' || hex === '#1d3155' || hex === '#254a84' || hex.includes('blue') || hex.includes('navy')) {
     return STOCK_GARMENTS.navy;
@@ -20,12 +20,26 @@ function getGarmentImageUrl(colorHex: string): string {
   if (hex === '#b49a78' || hex === '#d0bfa3' || hex.includes('beige') || hex.includes('cream') || hex.includes('sand')) {
     return STOCK_GARMENTS.beige;
   }
-  return STOCK_GARMENTS.black; // default to black tux
+  return STOCK_GARMENTS.black;
 }
 
 export class FalAdapter implements VirtualTryOnProvider {
   private async getApiKey(): Promise<string> {
     try {
+      // 1. Check cookies for demo mode setting
+      const cookieStore = await cookies();
+      const demoSettingsStr = cookieStore.get('sb-demo-ai-settings')?.value;
+      if (demoSettingsStr) {
+        try {
+          const settings = JSON.parse(demoSettingsStr);
+          const providerSetting = settings.find((s: any) => s.provider === 'Fal');
+          if (providerSetting?.configuration?.api_key) {
+            return providerSetting.configuration.api_key;
+          }
+        } catch (_) {}
+      }
+
+      // 2. Fallback to Supabase Database
       const supabase = await createClient();
       const { data } = await supabase
         .from('ai_provider_settings')
@@ -100,7 +114,6 @@ export class FalAdapter implements VirtualTryOnProvider {
     }
 
     try {
-      // 1. Fetch status of queue request
       const statusRes = await fetch(`https://queue.fal.run/fal-ai/foduu/idm-vton/requests/${jobId}/status`, {
         headers: {
           'Authorization': `Key ${apiKey}`,
@@ -139,7 +152,6 @@ export class FalAdapter implements VirtualTryOnProvider {
       }
 
       if (status === 'COMPLETED') {
-        // 2. Fetch completed output result details
         const resultRes = await fetch(`https://queue.fal.run/fal-ai/foduu/idm-vton/requests/${jobId}`, {
           headers: {
             'Authorization': `Key ${apiKey}`,
@@ -180,7 +192,6 @@ export class FalAdapter implements VirtualTryOnProvider {
   }
 
   async cancel(jobId: string): Promise<void> {
-    // Fal doesn't support easy REST API cancels on free queues, we just return
     return;
   }
 }

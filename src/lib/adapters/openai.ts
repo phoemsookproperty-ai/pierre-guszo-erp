@@ -1,9 +1,22 @@
 import { TryOnGenerationInput, TryOnGenerationResult, TryOnJobStatus, VirtualTryOnProvider } from '../tryon';
 import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 
 export class OpenAIAdapter implements VirtualTryOnProvider {
   private async getApiKey(): Promise<string> {
     try {
+      const cookieStore = await cookies();
+      const demoSettingsStr = cookieStore.get('sb-demo-ai-settings')?.value;
+      if (demoSettingsStr) {
+        try {
+          const settings = JSON.parse(demoSettingsStr);
+          const providerSetting = settings.find((s: any) => s.provider === 'OpenAI');
+          if (providerSetting?.configuration?.api_key) {
+            return providerSetting.configuration.api_key;
+          }
+        } catch (_) {}
+      }
+
       const supabase = await createClient();
       const { data } = await supabase
         .from('ai_provider_settings')
@@ -29,7 +42,6 @@ export class OpenAIAdapter implements VirtualTryOnProvider {
     }
 
     try {
-      // 1. Build a highly descriptive prompt incorporating the source photo and suit catalog choices
       const styleDesc = input.styleDetails || `${input.fitType} suit`;
       const patternDetail = input.patternType !== 'Solid' ? `${input.patternType} (${input.patternDesc})` : 'solid color';
       
@@ -44,7 +56,6 @@ Suit details:
 - Accents: includes a crisp white dress shirt and an elegant matching tie.
 The person should be shown in a natural, confident pose, facing the camera. The background should be a clean, minimalist professional photography studio background. Keep the person's face, features, and hairstyle as close to the reference photo as possible, integrating the suit seamlessly.`;
 
-      // 2. Call OpenAI DALL-E 3 API
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
@@ -71,11 +82,7 @@ The person should be shown in a natural, confident pose, facing the camera. The 
         throw new Error('OpenAI did not return any image URL in the response');
       }
 
-      // OpenAI DALL-E 3 returns the output synchronously,
-      // so we can resolve the job immediately as completed!
       const jobId = `openai_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
-      
-      // Store in global memory map to simulate retrieval if requested later
       globalOpenAIResults.set(jobId, outputUrl);
 
       return {
@@ -117,5 +124,4 @@ The person should be shown in a natural, confident pose, facing the camera. The 
   }
 }
 
-// In-memory store for synchronous OpenAI results to satisfy immediate status queries
 const globalOpenAIResults = new Map<string, string>();

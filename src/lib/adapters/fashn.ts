@@ -1,5 +1,6 @@
 import { TryOnGenerationInput, TryOnGenerationResult, TryOnJobStatus, VirtualTryOnProvider } from '../tryon';
 import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 
 const STOCK_GARMENTS: Record<string, string> = {
   'navy': 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=600&auto=format&fit=crop',
@@ -25,6 +26,18 @@ function getGarmentImageUrl(colorHex: string): string {
 export class FashnAdapter implements VirtualTryOnProvider {
   private async getApiKey(): Promise<string> {
     try {
+      const cookieStore = await cookies();
+      const demoSettingsStr = cookieStore.get('sb-demo-ai-settings')?.value;
+      if (demoSettingsStr) {
+        try {
+          const settings = JSON.parse(demoSettingsStr);
+          const providerSetting = settings.find((s: any) => s.provider === 'Fashn');
+          if (providerSetting?.configuration?.api_key) {
+            return providerSetting.configuration.api_key;
+          }
+        } catch (_) {}
+      }
+
       const supabase = await createClient();
       const { data } = await supabase
         .from('ai_provider_settings')
@@ -50,7 +63,6 @@ export class FashnAdapter implements VirtualTryOnProvider {
     }
 
     const garmentUrl = getGarmentImageUrl(input.colorHex);
-    // category mapping: tops, bottoms, one-pieces
     const category = input.garmentType.toLowerCase().includes('trouser') ? 'bottoms' : 'tops';
 
     try {
@@ -115,7 +127,7 @@ export class FashnAdapter implements VirtualTryOnProvider {
         throw new Error(data.error || 'Failed to fetch status from Fashn.ai');
       }
 
-      const status = data.status; // queued, processing, completed, failed
+      const status = data.status;
 
       if (status === 'queued') {
         return {
@@ -171,7 +183,6 @@ export class FashnAdapter implements VirtualTryOnProvider {
   }
 
   async cancel(jobId: string): Promise<void> {
-    // Fashn REST cancellation
     return;
   }
 }
