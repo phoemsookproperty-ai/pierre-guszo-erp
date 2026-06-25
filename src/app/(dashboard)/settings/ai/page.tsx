@@ -218,8 +218,8 @@ export default function AISettingsPage() {
                         onChange={(e) => setModelNames((prev) => ({ ...prev, [provider]: e.target.value }))}
                         className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-royal-navy font-semibold text-slate-700 bg-white"
                       >
-                        <option value="dall-e-3">dall-e-3 (แนะนำ - ความละเอียดสูง)</option>
-                        <option value="dall-e-2">dall-e-2 (ประหยัดค่าใช้จ่าย)</option>
+                        <option value="dall-e-3">dall-e-3 (แนะนำ - ใช้งานได้ปกติ)</option>
+                        <option value="dall-e-2">dall-e-2 (เฉพาะบัญชีเก่า / Legacy)</option>
                       </select>
                     ) : (
                       <input
