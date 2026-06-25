@@ -33,6 +33,7 @@ export async function POST(
         background_mode: backgroundMode = 'studio',
         provider_name = 'Mock',
         source_image_url,
+        garment_image_url,
       } = body;
 
       if (!suit_style_id || !color_pattern_id) {
@@ -83,6 +84,7 @@ export async function POST(
       const generationResult = await providerInstance.generate({
         sessionId,
         sourceImageUrl: source_image_url || '',
+        garmentImageUrl: garment_image_url || '',
         garmentType: style.category,
         fitType: style.fit_type,
         styleDetails: buildGarmentPrompt(style, pattern),
@@ -97,6 +99,13 @@ export async function POST(
         backgroundMode,
         numImages: generation_count,
       });
+
+      if (generationResult.status === 'failed') {
+        return NextResponse.json(
+          { error: generationResult.error || 'Failed to generate image via AI provider' },
+          { status: 500 }
+        );
+      }
 
       return NextResponse.json({
         success: true,
@@ -180,6 +189,7 @@ export async function POST(
       preserve_background: preserveBackground = false,
       background_mode: backgroundMode = 'studio',
       provider_name = 'Mock', // Default fallback
+      garment_image_url,
     } = body;
 
     if (!suit_style_id || !color_pattern_id) {
@@ -255,6 +265,7 @@ export async function POST(
     const generationResult = await providerInstance.generate({
       sessionId,
       sourceImageUrl: signedUrlData.signedUrl,
+      garmentImageUrl: garment_image_url || '',
       garmentType: style.category,
       fitType: style.fit_type,
       styleDetails: buildGarmentPrompt(style, pattern),
@@ -269,6 +280,13 @@ export async function POST(
       backgroundMode,
       numImages: generation_count,
     });
+
+    if (generationResult.status === 'failed') {
+      return NextResponse.json(
+        { error: generationResult.error || 'Failed to generate image via AI provider' },
+        { status: 500 }
+      );
+    }
 
     // 9. Update session record
     await supabase

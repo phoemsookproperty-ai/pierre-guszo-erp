@@ -232,6 +232,7 @@ export const DEFAULT_PATTERNS = [
 export interface TryOnGenerationInput {
   sessionId: string;
   sourceImageUrl: string;
+  garmentImageUrl?: string;
   garmentType: string;
   fitType: string;
   styleDetails: string;

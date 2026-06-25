@@ -538,6 +538,297 @@ const generateCompositeImage = (
   });
 };
 
+const generateGarmentOnlyImage = (
+  colorHex: string,
+  patternType: string,
+  style: any,
+  width = 600,
+  height = 800
+): string => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+
+  canvas.width = width;
+  canvas.height = height;
+
+  // Fill background with solid white
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const neckLeft = w * 0.4625;
+  const neckRight = w * 0.5375;
+  const neckTop = h * 0.275;
+  const neckBottom = h * 0.308;
+
+  const shoulderLeft = w * 0.25;
+  const shoulderRight = w * 0.75;
+  const shoulderY = h * 0.35;
+
+  const bodyLeft = w * 0.28;
+  const bodyRight = w * 0.72;
+  const bodyBottom = h;
+
+  // 1. Draw White Shirt (V-Neck area)
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.465, neckTop);
+  ctx.lineTo(w * 0.535, neckTop);
+  ctx.lineTo(w * 0.50, h * 0.45); // deep V-neck
+  ctx.closePath();
+  ctx.fill();
+
+  // Draw collar lines for shirt V-neck
+  ctx.strokeStyle = '#E2E8F0';
+  ctx.lineWidth = Math.max(1, w * 0.003);
+  ctx.beginPath();
+  ctx.moveTo(w * 0.465, neckTop);
+  ctx.lineTo(w * 0.49, h * 0.35);
+  ctx.lineTo(w * 0.50, h * 0.35);
+  ctx.lineTo(w * 0.51, h * 0.35);
+  ctx.lineTo(w * 0.535, neckTop);
+  ctx.stroke();
+
+  // 2. Draw Tie (Elegant Red/Gold Tie)
+  ctx.fillStyle = '#9B2C2C'; // Dark Red Tie
+  ctx.beginPath();
+  ctx.moveTo(w * 0.49, h * 0.30);
+  ctx.lineTo(w * 0.51, h * 0.30);
+  ctx.lineTo(w * 0.515, h * 0.42);
+  ctx.lineTo(w * 0.50, h * 0.47); // Point of the tie
+  ctx.lineTo(w * 0.485, h * 0.42);
+  ctx.closePath();
+  ctx.fill();
+
+  // Tie knot
+  ctx.fillStyle = '#742A2A';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.485, h * 0.30);
+  ctx.lineTo(w * 0.515, h * 0.30);
+  ctx.lineTo(w * 0.51, h * 0.33);
+  ctx.lineTo(w * 0.49, h * 0.33);
+  ctx.closePath();
+  ctx.fill();
+
+  // 3. Draw Suit Jacket main body
+  ctx.save();
+  
+  ctx.fillStyle = colorHex || '#101B33';
+  ctx.beginPath();
+  // Start from neck left
+  ctx.moveTo(neckLeft, neckBottom);
+  // Curve to left shoulder
+  ctx.quadraticCurveTo(w * 0.35, h * 0.31, shoulderLeft, shoulderY);
+  // Down left side
+  ctx.lineTo(bodyLeft, bodyBottom);
+  // Across bottom
+  ctx.lineTo(bodyRight, bodyBottom);
+  // Up right side
+  ctx.lineTo(shoulderRight, shoulderY);
+  // Curve to neck right
+  ctx.quadraticCurveTo(w * 0.65, h * 0.31, neckRight, neckBottom);
+  // Deep V-neck cut
+  ctx.lineTo(w * 0.50, h * 0.45);
+  ctx.closePath();
+  ctx.fill();
+
+  // Clip to the jacket area to apply patterns & shading
+  ctx.clip();
+
+  // Draw Pattern
+  if (patternType === 'Pinstripe') {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = Math.max(1, w * 0.002);
+    const spacing = w * 0.025;
+    for (let x = -w; x < w * 2; x += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + w * 0.1, h); // slightly angled vertical lines
+      ctx.stroke();
+    }
+  } else if (patternType === 'Check' || patternType === 'Windowpane') {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = Math.max(1, w * 0.0015);
+    const spacing = patternType === 'Windowpane' ? w * 0.08 : w * 0.04;
+    // Vertical lines
+    for (let x = -w; x < w * 2; x += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + w * 0.05, h);
+      ctx.stroke();
+    }
+    // Horizontal lines
+    for (let y = 0; y < h; y += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+  } else if (patternType === 'Herringbone') {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = Math.max(1, w * 0.001);
+    const size = w * 0.01;
+    for (let y = 0; y < h; y += size) {
+      ctx.beginPath();
+      for (let x = 0; x < w; x += size * 2) {
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + size, y + size);
+        ctx.lineTo(x + size * 2, y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  // Draw Shading & Shadows (3D depth)
+  // Shoulder highlights
+  const shoulderGrad = ctx.createLinearGradient(0, h * 0.3, 0, h * 0.45);
+  shoulderGrad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+  shoulderGrad.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+  ctx.fillStyle = shoulderGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Side shadows
+  const sideGrad = ctx.createLinearGradient(shoulderLeft, 0, shoulderRight, 0);
+  sideGrad.addColorStop(0, 'rgba(0, 0, 0, 0.25)');
+  sideGrad.addColorStop(0.15, 'rgba(0, 0, 0, 0)');
+  sideGrad.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
+  sideGrad.addColorStop(0.85, 'rgba(0, 0, 0, 0)');
+  sideGrad.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
+  ctx.fillStyle = sideGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.restore();
+
+  // 4. Draw Lapels (Over the jacket body)
+  ctx.fillStyle = colorHex || '#101B33';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = Math.max(1, w * 0.002);
+
+  // Left Lapel
+  ctx.beginPath();
+  ctx.moveTo(w * 0.47, neckTop);
+  ctx.lineTo(w * 0.42, h * 0.35); // outer corner
+  if (style?.lapel_style === 'Peak') {
+    ctx.lineTo(w * 0.39, h * 0.335); // peak accent out
+    ctx.lineTo(w * 0.425, h * 0.35); // peak accent in
+  } else {
+    // Notch lapel
+    ctx.lineTo(w * 0.435, h * 0.355); // notch cut
+    ctx.lineTo(w * 0.42, h * 0.36); // back down
+  }
+  ctx.lineTo(w * 0.49, h * 0.45); // deep lapel tip
+  ctx.lineTo(w * 0.49, neckBottom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Right Lapel
+  ctx.beginPath();
+  ctx.moveTo(w * 0.53, neckTop);
+  ctx.lineTo(w * 0.58, h * 0.35); // outer corner
+  if (style?.lapel_style === 'Peak') {
+    ctx.lineTo(w * 0.61, h * 0.335); // peak accent out
+    ctx.lineTo(w * 0.575, h * 0.35); // peak accent in
+  } else {
+    // Notch lapel
+    ctx.lineTo(w * 0.565, h * 0.355); // notch cut
+    ctx.lineTo(w * 0.58, h * 0.36); // back down
+  }
+  ctx.lineTo(w * 0.51, h * 0.45); // deep lapel tip
+  ctx.lineTo(w * 0.51, neckBottom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // 5. Draw Buttons & Details
+  ctx.fillStyle = '#D69E2E'; // Gold buttons
+  ctx.strokeStyle = '#975A16';
+  ctx.lineWidth = Math.max(1, w * 0.002);
+
+  const buttonRadius = Math.max(2, w * 0.006);
+
+  if (style?.button_style === 'Double-6') {
+    // 6 buttons for double breasted
+    const doubleRowY = [h * 0.48, h * 0.54, h * 0.60];
+    const leftColX = w * 0.45;
+    const rightColX = w * 0.55;
+
+    doubleRowY.forEach((by) => {
+      // Left button
+      ctx.beginPath();
+      ctx.arc(leftColX, by, buttonRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Right button
+      ctx.beginPath();
+      ctx.arc(rightColX, by, buttonRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    // Double breasted overlap lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.47, h * 0.45);
+    ctx.lineTo(w * 0.47, h);
+    ctx.stroke();
+  } else {
+    // Single breasted 2 buttons (default)
+    const buttonY1 = h * 0.48;
+    const buttonY2 = h * 0.55;
+
+    // Top button
+    ctx.beginPath();
+    ctx.arc(w * 0.50, buttonY1, buttonRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Bottom button
+    ctx.beginPath();
+    ctx.arc(w * 0.50, buttonY2, buttonRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Opening crease line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.50, h * 0.45);
+    ctx.lineTo(w * 0.50, h);
+    ctx.stroke();
+  }
+
+  // Pocket flaps
+  ctx.fillStyle = colorHex || '#101B33';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = Math.max(1, w * 0.0015);
+
+  const flapW = w * 0.09;
+  const flapH = h * 0.025;
+  const pocketY = h * 0.62;
+
+  // Left pocket
+  ctx.fillRect(w * 0.33, pocketY, flapW, flapH);
+  ctx.strokeRect(w * 0.33, pocketY, flapW, flapH);
+
+  // Right pocket
+  ctx.fillRect(w * 0.58, pocketY, flapW, flapH);
+  ctx.strokeRect(w * 0.58, pocketY, flapW, flapH);
+
+  // Breast pocket
+  ctx.save();
+  ctx.translate(w * 0.35, h * 0.43);
+  ctx.rotate(-0.05);
+  ctx.fillRect(0, 0, w * 0.065, h * 0.018);
+  ctx.strokeRect(0, 0, w * 0.065, h * 0.018);
+  ctx.restore();
+
+  return canvas.toDataURL('image/jpeg', 0.95);
+};
+
 export default function AIVirtualTryOn() {
   const supabase = createClient();
 
@@ -583,9 +874,19 @@ export default function AIVirtualTryOn() {
   // Output results
   const [tryonResults, setTryonResults] = useState<any[]>([]);
   const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
-  const [isCompareOpen, setIsCompareOpen] = useState(false);
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Sync cookies with localStorage for demo persistent settings
+  useEffect(() => {
+    try {
+      const localSettings = localStorage.getItem('sb-demo-ai-settings');
+      if (localSettings && !document.cookie.includes('sb-demo-ai-settings')) {
+        document.cookie = `sb-demo-ai-settings=${encodeURIComponent(localSettings)}; path=/; max-age=315360000`;
+      }
+    } catch (_) {}
+  }, []);
+
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
   const isDrawingRef = useRef(false);
 
   // Fetch styles and patterns catalog
@@ -952,6 +1253,17 @@ export default function AIVirtualTryOn() {
         }
       }
 
+      let clientGarmentUrl = '';
+      try {
+        clientGarmentUrl = generateGarmentOnlyImage(
+          selectedPattern?.primary_hex || '#101B33',
+          selectedPattern?.pattern_type || 'Solid',
+          selectedStyle
+        );
+      } catch (err) {
+        console.error("Failed to generate garment only image:", err);
+      }
+
       const reqPayload = {
         suit_style_id: selectedStyle.id,
         color_pattern_id: selectedPattern.id,
@@ -962,6 +1274,7 @@ export default function AIVirtualTryOn() {
         background_mode: preserveBackground ? 'original' : 'studio',
         provider_name: providerName,
         source_image_url: clientSourceUrl || sourcePreviewUrl || '',
+        garment_image_url: clientGarmentUrl || '',
       };
 
       const res = await fetch(`/api/ai-tryon/sessions/${sessionId}/generate`, {
@@ -972,6 +1285,9 @@ export default function AIVirtualTryOn() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to start AI generation');
+      if (data.error || data.status === 'failed') {
+        throw new Error(data.error || 'การประมวลผลด้วยโมเดล AI ล้มเหลว');
+      }
 
       setJobId(data.job_id);
 
@@ -1021,6 +1337,13 @@ export default function AIVirtualTryOn() {
         const res = await fetch(`/api/ai-tryon/sessions/${sessionId}/status?job_id=${jobIdString}&provider=${providerName}`);
         const data = await res.json();
 
+        if (!res.ok) {
+          clearInterval(intervalId);
+          setErrorMessage(data.error || 'เกิดข้อผิดพลาดในการตรวจสอบสถานะ');
+          setGenerationStatus('failed');
+          return;
+        }
+
         if (data.status === 'processing') {
           setGenerationProgress(data.progressPct || 50);
         } else if (data.status === 'completed') {
@@ -1047,7 +1370,7 @@ export default function AIVirtualTryOn() {
           setErrorMessage(data.error || 'การประมวลผลของ AI Adapter ล้มเหลว');
           setGenerationStatus('failed');
         }
-      } catch (e) {
+      } catch (e: any) {
         console.error('Polling error:', e);
       }
     };

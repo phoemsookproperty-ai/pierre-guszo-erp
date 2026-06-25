@@ -56,6 +56,12 @@ export default function AISettingsPage() {
   };
 
   useEffect(() => {
+    try {
+      const localSettings = localStorage.getItem('sb-demo-ai-settings');
+      if (localSettings && !document.cookie.includes('sb-demo-ai-settings')) {
+        document.cookie = `sb-demo-ai-settings=${encodeURIComponent(localSettings)}; path=/; max-age=315360000`;
+      }
+    } catch (_) {}
     fetchSettings();
   }, []);
 
@@ -82,6 +88,36 @@ export default function AISettingsPage() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save settings');
+
+      // Save to localStorage too!
+      try {
+        const localSettingsStr = localStorage.getItem('sb-demo-ai-settings') || '[]';
+        let currentSettings = JSON.parse(localSettingsStr);
+        if (!Array.isArray(currentSettings)) currentSettings = [];
+        
+        const existingIdx = currentSettings.findIndex((s: any) => s.provider === provider);
+        const newSetting = {
+          provider,
+          model_name: modelNames[provider],
+          endpoint_url: endpoints[provider],
+          cost_per_generation: costs[provider],
+          is_enabled: enabledStatus[provider],
+          configuration: {
+            api_key: apiKeys[provider] && !apiKeys[provider].includes('...') ? apiKeys[provider] : (currentSettings[existingIdx]?.configuration?.api_key || ''),
+            has_key: apiKeys[provider] ? true : false,
+          }
+        };
+        
+        if (existingIdx >= 0) {
+          currentSettings[existingIdx] = newSetting;
+        } else {
+          currentSettings.push(newSetting);
+        }
+        localStorage.setItem('sb-demo-ai-settings', JSON.stringify(currentSettings));
+        
+        // Write cookie with 10-year expiration directly in the client too!
+        document.cookie = `sb-demo-ai-settings=${encodeURIComponent(JSON.stringify(currentSettings))}; path=/; max-age=315360000`;
+      } catch (_) {}
 
       setSuccessMessage(`บันทึกการตั้งค่าผู้ให้บริการ ${provider} สำเร็จเรียบร้อยแล้ว`);
       
@@ -176,13 +212,24 @@ export default function AISettingsPage() {
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">Model Name / รหัสโมเดล</label>
-                    <input
-                      type="text"
-                      value={modelNames[provider] || ''}
-                      onChange={(e) => setModelNames((prev) => ({ ...prev, [provider]: e.target.value }))}
-                      placeholder="e.g. fal-ai/foduu/idm-vton"
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-royal-navy font-semibold text-slate-700"
-                    />
+                    {provider === 'OpenAI' ? (
+                      <select
+                        value={modelNames[provider] || 'dall-e-3'}
+                        onChange={(e) => setModelNames((prev) => ({ ...prev, [provider]: e.target.value }))}
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-royal-navy font-semibold text-slate-700 bg-white"
+                      >
+                        <option value="dall-e-3">dall-e-3 (แนะนำ - ความละเอียดสูง)</option>
+                        <option value="dall-e-2">dall-e-2 (ประหยัดค่าใช้จ่าย)</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={modelNames[provider] || ''}
+                        onChange={(e) => setModelNames((prev) => ({ ...prev, [provider]: e.target.value }))}
+                        placeholder={provider === 'Fal' ? 'fal-ai/foduu/idm-vton' : 'e.g. model-identifier'}
+                        className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-royal-navy font-semibold text-slate-700"
+                      />
+                    )}
                   </div>
 
                   {!isMock && (

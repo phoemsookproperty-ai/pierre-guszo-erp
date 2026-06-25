@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getProvider } from '@/lib/tryon';
+import { cookies } from 'next/headers';
 
 export async function GET(
   request: Request,
@@ -15,19 +16,9 @@ export async function GET(
       return NextResponse.json({ error: 'job_id is required' }, { status: 400 });
     }
 
-    const supabase = await createClient();
-
-    // 1. Auth check
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
-    }
-
-    const isMockSession = sessionId.startsWith('mock_sess_');
+    const cookieStore = await cookies();
+    const isMockMode = cookieStore.get('sb-mock-token')?.value === 'true';
+    const isMockSession = sessionId.startsWith('mock_sess_') || isMockMode;
 
     if (isMockSession) {
       const providerName = searchParams.get('provider') || 'Mock';
@@ -41,6 +32,18 @@ export async function GET(
         outputImageUrls: statusResult.outputImageUrls || [],
         error: statusResult.error,
       });
+    }
+
+    const supabase = await createClient();
+
+    // 1. Auth check
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
     }
 
     // 2. Fetch session detail

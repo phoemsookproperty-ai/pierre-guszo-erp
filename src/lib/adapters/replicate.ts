@@ -62,7 +62,7 @@ export class ReplicateAdapter implements VirtualTryOnProvider {
       };
     }
 
-    const garmentUrl = getGarmentImageUrl(input.colorHex);
+    const garmentUrl = input.garmentImageUrl || getGarmentImageUrl(input.colorHex);
     const category = input.garmentType.toLowerCase().includes('trouser') ? 'lower_body' : 'upper_body';
 
     try {

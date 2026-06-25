@@ -163,7 +163,7 @@ export async function POST(request: Request) {
       });
 
       const res = NextResponse.json({ success: true, message: 'Settings saved successfully (Demo Mode)' });
-      res.cookies.set('sb-demo-ai-settings', JSON.stringify(updated), { path: '/', maxAge: 604800 });
+      res.cookies.set('sb-demo-ai-settings', JSON.stringify(updated), { path: '/', maxAge: 315360000 });
       return res;
     }
 

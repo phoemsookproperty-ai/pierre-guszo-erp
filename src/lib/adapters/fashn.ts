@@ -62,7 +62,7 @@ export class FashnAdapter implements VirtualTryOnProvider {
       };
     }
 
-    const garmentUrl = getGarmentImageUrl(input.colorHex);
+    const garmentUrl = input.garmentImageUrl || getGarmentImageUrl(input.colorHex);
     const category = input.garmentType.toLowerCase().includes('trouser') ? 'bottoms' : 'tops';
 
     try {
