@@ -877,6 +877,8 @@ export default function AIVirtualTryOn() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Sync cookies with localStorage for demo persistent settings
+  const [aiSettings, setAISettings] = useState<any[]>([]);
+
   useEffect(() => {
     try {
       const localSettings = localStorage.getItem('sb-demo-ai-settings');
@@ -884,7 +886,48 @@ export default function AIVirtualTryOn() {
         document.cookie = `sb-demo-ai-settings=${encodeURIComponent(localSettings)}; path=/; max-age=315360000`;
       }
     } catch (_) {}
+
+    const fetchAISettings = async () => {
+      try {
+        const res = await fetch('/api/settings/ai');
+        const data = await res.json();
+        if (res.ok && data.settings) {
+          setAISettings(data.settings);
+        }
+      } catch (e) {
+        console.error('Error fetching AI settings:', e);
+      }
+    };
+    fetchAISettings();
   }, []);
+
+  const getProviderConfig = (provider: string) => {
+    const setting = aiSettings.find((s) => s.provider === provider);
+    if (!setting) {
+      const defaults: Record<string, { label: string; cost: number }> = {
+        Mock: { label: 'Mock Model (ฟรี - ทันที)', cost: 0.00 },
+        Fal: { label: 'Fal IDM-VTON (0.015 USD/รูป)', cost: 0.0150 },
+        Fashn: { label: 'Fashn Professional (0.050 USD/รูป)', cost: 0.0500 },
+        OpenAI: { label: 'OpenAI DALL-E 3 (0.040 USD/รูป)', cost: 0.0400 },
+        Replicate: { label: 'Replicate IDM-VTON (0.025 USD/รูป)', cost: 0.0250 },
+      };
+      return defaults[provider];
+    }
+    
+    let label = '';
+    const cost = Number(setting.cost_per_generation) || 0;
+    const model = setting.model_name || '';
+
+    if (provider === 'Mock') {
+      label = `Mock Model (ฟรี - ทันที)`;
+    } else if (provider === 'OpenAI') {
+      label = `OpenAI ${model.toUpperCase() === 'DALL-E-2' ? 'DALL-E 2' : 'DALL-E 3'} (${cost.toFixed(3)} USD/รูป)`;
+    } else {
+      label = `${provider} ${model ? `(${model})` : ''} (${cost.toFixed(3)} USD/รูป)`;
+    }
+
+    return { label, cost };
+  };
 
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const isDrawingRef = useRef(false);
@@ -1145,17 +1188,12 @@ export default function AIVirtualTryOn() {
     }
   };
 
-  // Fabric / Cost estimation hooks
+  // Fabric / Cost estimation hooks using dynamic settings
   useEffect(() => {
-    const rateMap: Record<string, number> = {
-      'Mock': 0.00,
-      'Fal': 0.0150,
-      'Fashn': 0.0500,
-      'Replicate': 0.0250,
-    };
-    const rate = rateMap[providerName] || 0.00;
+    const config = getProviderConfig(providerName);
+    const rate = config ? config.cost : 0.00;
     setEstimatedCost(numImages * rate);
-  }, [providerName, numImages]);
+  }, [providerName, numImages, aiSettings]);
 
   const simulateClientSideGeneration = () => {
     let progress = 10;
@@ -1759,11 +1797,11 @@ export default function AIVirtualTryOn() {
                     onChange={(e) => setProviderName(e.target.value)}
                     className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none"
                   >
-                    <option value="Mock">Mock Model (ฟรี - ทันที)</option>
-                    <option value="Fal">Fal IDM-VTON (0.015 USD/รูป)</option>
-                    <option value="Fashn">Fashn Professional (0.050 USD/รูป)</option>
-                    <option value="OpenAI">OpenAI DALL-E 3 (0.040 USD/รูป)</option>
-                    <option value="Replicate">Replicate IDM-VTON (0.025 USD/รูป)</option>
+                    <option value="Mock">{getProviderConfig('Mock')?.label || 'Mock Model (ฟรี - ทันที)'}</option>
+                    <option value="Fal">{getProviderConfig('Fal')?.label || 'Fal IDM-VTON (0.015 USD/รูป)'}</option>
+                    <option value="Fashn">{getProviderConfig('Fashn')?.label || 'Fashn Professional (0.050 USD/รูป)'}</option>
+                    <option value="OpenAI">{getProviderConfig('OpenAI')?.label || 'OpenAI DALL-E 3 (0.040 USD/รูป)'}</option>
+                    <option value="Replicate">{getProviderConfig('Replicate')?.label || 'Replicate IDM-VTON (0.025 USD/รูป)'}</option>
                   </select>
                 </div>
               </div>
